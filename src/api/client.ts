@@ -48,7 +48,15 @@ class ApiClient {
         );
       }
 
-      return (await response.json()) as T;
+      const responseData = (await response.json()) as { success: boolean; data?: T; message?: string };
+      
+      // Extract data from API response format
+      if (responseData.success && responseData.data !== undefined) {
+        return responseData.data;
+      }
+      
+      // Fallback: return the whole response if it doesn't match expected format
+      return responseData as T;
     } catch (error) {
       if (error instanceof Error) {
         throw error;

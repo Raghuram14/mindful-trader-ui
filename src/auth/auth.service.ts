@@ -34,6 +34,27 @@ export class AuthService {
   clearToken(): void {
     localStorage.removeItem(AuthService.TOKEN_KEY);
   }
+
+  async logout(): Promise<void> {
+    const token = this.getToken();
+    if (token) {
+      try {
+        // Call backend logout endpoint (optional, but good for logging)
+        await fetch(`${API_BASE_URL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        }).catch(() => {
+          // Ignore errors - logout should always succeed client-side
+        });
+      } catch (error) {
+        // Ignore errors - logout should always succeed client-side
+      }
+    }
+    this.clearToken();
+  }
 }
 
 export const authService = new AuthService();

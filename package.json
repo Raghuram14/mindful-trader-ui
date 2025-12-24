@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit --build",
+    "type-check": "tsc --noEmit --project tsconfig.app.json",
     "pre-push": "bash scripts/pre-push.sh",
     "setup-hooks": "bash scripts/setup-git-hooks.sh",
     "verify": "npm run lint && npm run type-check && npm run build"

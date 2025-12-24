@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect } from 'react';
 import { 
   UserProfile, 
   TradingRule, 
@@ -8,27 +8,84 @@ import {
   mockTradingRules,
 } from '@/lib/mockData';
 import { useTrades } from './TradeContext';
+import { profileApi, UserProfileResponse } from '@/api/profile';
+import { useAuth } from '@/auth/auth.context';
 
 interface RulesContextType {
   profile: UserProfile | null;
   rules: TradingRule[];
   dailyStatus: DailyRuleStatus[];
-  updateProfile: (profile: UserProfile) => void;
+  isLoadingProfile: boolean;
+  updateProfile: (profile: UserProfile) => Promise<void>;
   addRule: (rule: Omit<TradingRule, 'id'>) => void;
   updateRule: (id: string, updates: Partial<TradingRule>) => void;
   deleteRule: (id: string) => void;
-  getDailyStatus: () => DailyRuleStatus[];
 }
 
 const RulesContext = createContext<RulesContextType | undefined>(undefined);
 
 export function RulesProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfile] = useState<UserProfile | null>(mockUserProfile);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [rules, setRules] = useState<TradingRule[]>(mockTradingRules);
   const { getClosedTrades } = useTrades();
+  const { isAuthenticated } = useAuth();
 
-  const updateProfile = (newProfile: UserProfile) => {
-    setProfile(newProfile);
+  // Fetch profile from API when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadProfile();
+    } else {
+      setIsLoadingProfile(false);
+    }
+  }, [isAuthenticated]);
+
+  const loadProfile = async (): Promise<void> => {
+    try {
+      setIsLoadingProfile(true);
+      const userProfile = await profileApi.getProfile();
+      
+      // Map API response to UserProfile format
+      const mappedProfile: UserProfile = {
+        name: userProfile.name || '',
+        experienceLevel: userProfile.experienceLevel || 'INTERMEDIATE',
+        accountSize: userProfile.accountSize || 100000,
+        tradingStyle: userProfile.tradingStyle || 'MIXED',
+      };
+      
+      setProfile(mappedProfile);
+    } catch (error) {
+      console.error('Failed to load profile:', error);
+      // Set default profile on error
+      setProfile(mockUserProfile);
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
+  const updateProfile = async (newProfile: UserProfile): Promise<void> => {
+    try {
+      // Update via API
+      const updated = await profileApi.updateProfile({
+        name: newProfile.name,
+        experienceLevel: newProfile.experienceLevel,
+        accountSize: newProfile.accountSize,
+        tradingStyle: newProfile.tradingStyle,
+      });
+
+      // Map API response to UserProfile format
+      const mappedProfile: UserProfile = {
+        name: updated.name || '',
+        experienceLevel: updated.experienceLevel || 'INTERMEDIATE',
+        accountSize: updated.accountSize || 100000,
+        tradingStyle: updated.tradingStyle || 'MIXED',
+      };
+
+      setProfile(mappedProfile);
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      throw error;
+    }
   };
 
   const addRule = (ruleData: Omit<TradingRule, 'id'>) => {
@@ -51,7 +108,7 @@ export function RulesProvider({ children }: { children: ReactNode }) {
 
   const closedTrades = getClosedTrades();
 
-  const getDailyStatus = (): DailyRuleStatus[] => {
+  const dailyStatus = useMemo((): DailyRuleStatus[] => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -112,9 +169,7 @@ export function RulesProvider({ children }: { children: ReactNode }) {
           status: 'SAFE' as RuleStatus,
         };
       });
-  };
-
-  const dailyStatus = useMemo(() => getDailyStatus(), [rules, profile, closedTrades]);
+  }, [rules, profile, closedTrades]);
 
   return (
     <RulesContext.Provider
@@ -122,11 +177,11 @@ export function RulesProvider({ children }: { children: ReactNode }) {
         profile,
         rules,
         dailyStatus,
+        isLoadingProfile,
         updateProfile,
         addRule,
         updateRule,
         deleteRule,
-        getDailyStatus,
       }}
     >
       {children}

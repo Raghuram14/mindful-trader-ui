@@ -34,7 +34,7 @@ fi
 
 # Run type check
 echo -e "${GREEN}🔎 Running TypeScript type check...${NC}"
-if ! npx tsc --noEmit --build; then
+if ! npm run type-check; then
   echo -e "${RED}❌ TypeScript type check failed! Please fix type errors before pushing.${NC}"
   exit 1
 fi

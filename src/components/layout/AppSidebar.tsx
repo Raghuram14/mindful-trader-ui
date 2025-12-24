@@ -25,8 +25,8 @@ export function AppSidebar() {
   const { logout } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
 
-  const handleLogout = (): void => {
-    logout();
+  const handleLogout = async (): Promise<void> => {
+    await logout();
     window.location.href = "/";
   };
 

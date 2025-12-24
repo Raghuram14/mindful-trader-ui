@@ -5,7 +5,7 @@ import { AuthState } from './auth.types';
 interface AuthContextType {
   isAuthenticated: boolean;
   loginWithGoogle: (idToken: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -49,13 +49,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = (): void => {
-    authService.clearToken();
-    setAuthState({
-      token: null,
-      isAuthenticated: false,
-    });
-    // Navigation will be handled by the component calling this
+  const logout = async (): Promise<void> => {
+    try {
+      // Call backend logout endpoint and clear token
+      await authService.logout();
+    } catch (error) {
+      // Even if backend call fails, clear token locally
+      authService.clearToken();
+    } finally {
+      setAuthState({
+        token: null,
+        isAuthenticated: false,
+      });
+      // Navigation will be handled by the component calling this
+    }
   };
 
   return (

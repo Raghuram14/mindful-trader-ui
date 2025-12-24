@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRules } from '@/context/RulesContext';
 import { UserProfile } from '@/lib/mockData';
 import { Button } from '@/components/ui/button';
@@ -23,10 +23,29 @@ export function ProfileSetup({ open, onOpenChange }: ProfileSetupProps) {
     }
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Update form data when profile changes
+  useEffect(() => {
+    if (profile) {
+      setFormData(profile);
+    }
+  }, [profile]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile(formData);
-    onOpenChange(false);
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      await updateProfile(formData);
+      onOpenChange(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save profile');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -100,14 +119,21 @@ export function ProfileSetup({ open, onOpenChange }: ProfileSetupProps) {
             </Select>
           </div>
 
+          {error && (
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+              <p className="text-sm text-destructive">{error}</p>
+            </div>
+          )}
+
           <div className="flex gap-3 pt-2">
-            <Button type="submit" className="flex-1">
-              Save Profile
+            <Button type="submit" className="flex-1" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Save Profile'}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
