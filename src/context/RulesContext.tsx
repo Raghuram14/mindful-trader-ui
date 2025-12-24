@@ -5,10 +5,10 @@ import {
   DailyRuleStatus, 
   RuleStatus,
   mockUserProfile,
-  mockTradingRules,
 } from '@/lib/mockData';
 import { useTrades } from './TradeContext';
 import { profileApi, UserProfileResponse } from '@/api/profile';
+import { rulesApi, RuleResponse } from '@/api/rules';
 import { useAuth } from '@/auth/auth.context';
 
 interface RulesContextType {
@@ -16,10 +16,11 @@ interface RulesContextType {
   rules: TradingRule[];
   dailyStatus: DailyRuleStatus[];
   isLoadingProfile: boolean;
+  isLoadingRules: boolean;
   updateProfile: (profile: UserProfile) => Promise<void>;
-  addRule: (rule: Omit<TradingRule, 'id'>) => void;
-  updateRule: (id: string, updates: Partial<TradingRule>) => void;
-  deleteRule: (id: string) => void;
+  addRule: (rule: Omit<TradingRule, 'id'>) => Promise<void>;
+  updateRule: (id: string, updates: Partial<TradingRule>) => Promise<void>;
+  deleteRule: (id: string) => Promise<void>;
 }
 
 const RulesContext = createContext<RulesContextType | undefined>(undefined);
@@ -27,16 +28,19 @@ const RulesContext = createContext<RulesContextType | undefined>(undefined);
 export function RulesProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-  const [rules, setRules] = useState<TradingRule[]>(mockTradingRules);
+  const [rules, setRules] = useState<TradingRule[]>([]);
+  const [isLoadingRules, setIsLoadingRules] = useState(true);
   const { getClosedTrades } = useTrades();
   const { isAuthenticated } = useAuth();
 
-  // Fetch profile from API when authenticated
+  // Fetch profile and rules from API when authenticated
   useEffect(() => {
     if (isAuthenticated) {
       loadProfile();
+      loadRules();
     } else {
       setIsLoadingProfile(false);
+      setIsLoadingRules(false);
     }
   }, [isAuthenticated]);
 
@@ -88,22 +92,94 @@ export function RulesProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addRule = (ruleData: Omit<TradingRule, 'id'>) => {
-    const newRule: TradingRule = {
-      ...ruleData,
-      id: Date.now().toString(),
-    };
-    setRules(prev => [...prev, newRule]);
+  const loadRules = async (): Promise<void> => {
+    try {
+      setIsLoadingRules(true);
+      const rulesData = await rulesApi.getRules();
+      
+      // Map API response to TradingRule format
+      const mappedRules: TradingRule[] = rulesData.map((rule: RuleResponse) => ({
+        id: rule.id,
+        type: rule.type,
+        value: rule.value,
+        valueType: rule.valueType,
+        isActive: rule.isActive,
+        description: rule.description,
+      }));
+      
+      setRules(mappedRules);
+    } catch (error) {
+      console.error('Failed to load rules:', error);
+      // Set empty array on error
+      setRules([]);
+    } finally {
+      setIsLoadingRules(false);
+    }
   };
 
-  const updateRule = (id: string, updates: Partial<TradingRule>) => {
-    setRules(prev =>
-      prev.map(rule => (rule.id === id ? { ...rule, ...updates } : rule))
-    );
+  const addRule = async (ruleData: Omit<TradingRule, 'id'>): Promise<void> => {
+    try {
+      const created = await rulesApi.createRule({
+        type: ruleData.type,
+        value: ruleData.value,
+        valueType: ruleData.valueType,
+        isActive: ruleData.isActive ?? true,
+        description: ruleData.description,
+      });
+
+      // Map API response to TradingRule format
+      const newRule: TradingRule = {
+        id: created.id,
+        type: created.type,
+        value: created.value,
+        valueType: created.valueType,
+        isActive: created.isActive,
+        description: created.description,
+      };
+
+      setRules(prev => [...prev, newRule]);
+    } catch (error) {
+      console.error('Failed to create rule:', error);
+      throw error;
+    }
   };
 
-  const deleteRule = (id: string) => {
-    setRules(prev => prev.filter(rule => rule.id !== id));
+  const updateRule = async (id: string, updates: Partial<TradingRule>): Promise<void> => {
+    try {
+      const updated = await rulesApi.updateRule(id, {
+        value: updates.value,
+        valueType: updates.valueType,
+        isActive: updates.isActive,
+        description: updates.description,
+      });
+
+      // Map API response to TradingRule format
+      const updatedRule: TradingRule = {
+        id: updated.id,
+        type: updated.type,
+        value: updated.value,
+        valueType: updated.valueType,
+        isActive: updated.isActive,
+        description: updated.description,
+      };
+
+      setRules(prev =>
+        prev.map(rule => (rule.id === id ? updatedRule : rule))
+      );
+    } catch (error) {
+      console.error('Failed to update rule:', error);
+      throw error;
+    }
+  };
+
+  const deleteRule = async (id: string): Promise<void> => {
+    try {
+      await rulesApi.deleteRule(id);
+      setRules(prev => prev.filter(rule => rule.id !== id));
+    } catch (error) {
+      console.error('Failed to delete rule:', error);
+      throw error;
+    }
   };
 
   const closedTrades = getClosedTrades();
@@ -178,6 +254,7 @@ export function RulesProvider({ children }: { children: ReactNode }) {
         rules,
         dailyStatus,
         isLoadingProfile,
+        isLoadingRules,
         updateProfile,
         addRule,
         updateRule,
