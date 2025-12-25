@@ -1,12 +1,12 @@
-import { Shield, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useRules } from '@/context/RulesContext';
-import { formatCurrency } from '@/lib/mockData';
-import { TradingRuleType } from '@/lib/mockData';
+import { Shield, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useRules } from "@/context/RulesContext";
+import { formatCurrency } from "@/lib/mockData";
+import { TradingRuleType } from "@/lib/mockData";
 
 export function GuardrailsCard() {
-  const { rules, dailyStatus } = useRules();
-  const activeRules = rules.filter(r => r.isActive);
+  const { rules, dailyStatus, profile } = useRules();
+  const activeRules = rules.filter((r) => r.isActive);
 
   if (activeRules.length === 0) {
     return (
@@ -14,7 +14,9 @@ export function GuardrailsCard() {
         <div className="flex items-start gap-3">
           <Shield className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-base font-semibold text-foreground mb-1">Today's Guardrails</p>
+            <p className="text-base font-semibold text-foreground mb-1">
+              Today's Guardrails
+            </p>
             <p className="text-xs text-muted-foreground mb-2">
               Your self-defined limits for today
             </p>
@@ -35,9 +37,9 @@ export function GuardrailsCard() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'BREACHED':
+      case "BREACHED":
         return <AlertTriangle className="w-4 h-4 text-destructive" />;
-      case 'WARNING':
+      case "WARNING":
         return <AlertTriangle className="w-4 h-4 text-warning" />;
       default:
         return <CheckCircle2 className="w-4 h-4 text-success" />;
@@ -46,67 +48,83 @@ export function GuardrailsCard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'BREACHED':
-        return 'border-l-destructive';
-      case 'WARNING':
-        return 'border-l-warning';
+      case "BREACHED":
+        return "border-l-destructive";
+      case "WARNING":
+        return "border-l-warning";
       default:
-        return 'border-l-success';
+        return "border-l-success";
     }
   };
 
   const getRuleLabel = (rule: TradingRuleType) => {
     switch (rule) {
-      case 'DAILY_LOSS':
-        return 'Daily loss limit';
-      case 'MAX_LOSING_TRADES':
-        return 'Losing trades';
-      case 'DAILY_TARGET':
-        return 'Daily target';
-      case 'STOP_AFTER_TARGET':
-        return 'Stop after target';
-      case 'STOP_AFTER_LOSS':
-        return 'Stop after loss';
+      case "DAILY_LOSS":
+        return "Daily loss limit";
+      case "MAX_LOSING_TRADES":
+        return "Losing trades";
+      case "DAILY_TARGET":
+        return "Daily target";
+      case "STOP_AFTER_TARGET":
+        return "Stop after target";
+      case "STOP_AFTER_LOSS":
+        return "Stop after loss";
       default:
-        return 'Rule';
+        return "Rule";
     }
   };
 
   const formatRuleValue = (status: any, rule: any) => {
-    if (rule.type === 'DAILY_LOSS') {
+    if (rule.type === "DAILY_LOSS") {
+      // Check if percentage or absolute
+      if (rule.valueType === "PERCENTAGE") {
+        // For percentage, remainingValue is already in absolute terms (currency)
+        return `${formatCurrency(status.remainingValue)} remaining`;
+      }
       return `${formatCurrency(status.remainingValue)} remaining`;
     }
-    if (rule.type === 'MAX_LOSING_TRADES') {
+    if (rule.type === "MAX_LOSING_TRADES") {
       return `${status.currentValue} of ${status.limitValue} used`;
     }
-    if (rule.type === 'DAILY_TARGET') {
-      return `${formatCurrency(status.remainingValue)} remaining`;
+    if (rule.type === "DAILY_TARGET") {
+      // Show current profit achieved and remaining target
+      const currentProfit = status.currentValue || 0;
+      const remaining = status.remainingValue || 0;
+
+      if (currentProfit > 0) {
+        return `${formatCurrency(currentProfit)} achieved • ${formatCurrency(
+          remaining
+        )} remaining`;
+      }
+      return `${formatCurrency(remaining)} remaining`;
     }
-    return 'Active';
+    return "Active";
   };
 
   const getStatusMessage = (status: any, rule: any) => {
-    if (status.status === 'BREACHED') {
+    if (status.status === "BREACHED") {
       return "You've reached a limit you set to protect yourself.";
     }
-    if (status.status === 'WARNING') {
+    if (status.status === "WARNING") {
       return "You're close to a limit you set for today.";
     }
     return null;
   };
 
-  const overallStatus = dailyStatus.some(s => s.status === 'BREACHED')
-    ? 'BREACHED'
-    : dailyStatus.some(s => s.status === 'WARNING')
-    ? 'WARNING'
-    : 'SAFE';
+  const overallStatus = dailyStatus.some((s) => s.status === "BREACHED")
+    ? "BREACHED"
+    : dailyStatus.some((s) => s.status === "WARNING")
+    ? "WARNING"
+    : "SAFE";
 
   return (
     <div className={`card-calm border-l-4 ${getStatusColor(overallStatus)}`}>
       <div className="flex items-start gap-3 mb-4">
         <Shield className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
         <div className="flex-1">
-          <p className="text-base font-semibold text-foreground mb-1">Today's Guardrails</p>
+          <p className="text-base font-semibold text-foreground mb-1">
+            Today's Guardrails
+          </p>
           <p className="text-xs text-muted-foreground">
             Your self-defined limits for today
           </p>
@@ -114,19 +132,19 @@ export function GuardrailsCard() {
       </div>
 
       <div className="space-y-3">
-        {dailyStatus.map(status => {
-          const rule = rules.find(r => r.id === status.ruleId);
+        {dailyStatus.map((status) => {
+          const rule = rules.find((r) => r.id === status.ruleId);
           if (!rule) return null;
 
           return (
             <div
               key={status.ruleId}
               className={`p-3 rounded-lg ${
-                status.status === 'BREACHED'
-                  ? 'bg-destructive/10 border border-destructive/20'
-                  : status.status === 'WARNING'
-                  ? 'bg-warning/10 border border-warning/20'
-                  : 'bg-secondary/50 border border-border'
+                status.status === "BREACHED"
+                  ? "bg-destructive/10 border border-destructive/20"
+                  : status.status === "WARNING"
+                  ? "bg-warning/10 border border-warning/20"
+                  : "bg-secondary/50 border border-border"
               }`}
             >
               <div className="flex items-center justify-between mb-1">
@@ -161,4 +179,3 @@ export function GuardrailsCard() {
     </div>
   );
 }
-

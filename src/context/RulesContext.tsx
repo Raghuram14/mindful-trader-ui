@@ -199,6 +199,11 @@ export function RulesProvider({ children }: { children: ReactNode }) {
     const totalLoss = todayTrades
       .filter(t => t.result === 'loss')
       .reduce((sum, t) => sum + (t.riskComfort || 0), 0);
+    
+    // Calculate total profit from today's trades
+    const totalProfit = todayTrades
+      .filter(t => t.profitLoss !== undefined)
+      .reduce((sum, t) => sum + (t.profitLoss || 0), 0);
 
     return rules
       .filter(rule => rule.isActive)
@@ -216,6 +221,24 @@ export function RulesProvider({ children }: { children: ReactNode }) {
             ruleId: rule.id,
             currentValue: totalLoss,
             limitValue,
+            remainingValue: remaining,
+            status,
+          };
+        }
+
+        if (rule.type === 'DAILY_TARGET') {
+          const targetValue = rule.valueType === 'PERCENTAGE'
+            ? (profile?.accountSize || 100000) * (rule.value / 100)
+            : rule.value;
+          const remaining = Math.max(0, targetValue - totalProfit);
+          const status: RuleStatus = 
+            remaining === 0 ? 'BREACHED' :
+            remaining <= targetValue * 0.2 ? 'WARNING' : 'SAFE';
+          
+          return {
+            ruleId: rule.id,
+            currentValue: totalProfit,
+            limitValue: targetValue,
             remainingValue: remaining,
             status,
           };

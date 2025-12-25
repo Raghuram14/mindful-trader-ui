@@ -3,6 +3,13 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { useTrades } from '@/context/TradeContext';
 import { formatCurrency, Trade } from '@/lib/mockData';
 import { Filter } from 'lucide-react';
+import {
+  getBehavioralTag,
+  isWithinPlan,
+  formatTradeTime,
+  getConfidenceDots,
+  getInsightHint,
+} from '@/utils/tradeBehavior';
 
 const exitReasonLabels: Record<NonNullable<Trade['exitReason']>, string> = {
   target: 'Target',
@@ -13,7 +20,7 @@ const exitReasonLabels: Record<NonNullable<Trade['exitReason']>, string> = {
 };
 
 export default function HistoryPage() {
-  const { getClosedTrades } = useTrades();
+  const { getClosedTrades, trades } = useTrades();
   const closedTrades = getClosedTrades();
 
   const [filterReason, setFilterReason] = useState<Trade['exitReason'] | 'all'>('all');
@@ -91,43 +98,119 @@ export default function HistoryPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredTrades.map((trade) => (
-              <div
-                key={trade.id}
-                className="card-calm"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="font-semibold text-foreground">{trade.symbol}</span>
-                    <span className="text-xs px-2 py-0.5 rounded font-medium bg-secondary text-secondary-foreground">
-                      {trade.instrumentType}
-                    </span>
-                    {trade.instrumentType === 'OPTIONS' && trade.optionType && (
-                      <span className="text-xs px-2 py-0.5 rounded font-medium bg-accent text-accent-foreground">
-                        {trade.optionType}
-                      </span>
+            {filteredTrades.map((trade) => {
+              const behavioralTag = getBehavioralTag(trade);
+              const withinPlan = isWithinPlan(trade);
+              const timeContext = formatTradeTime(trade);
+              const confidenceDots = getConfidenceDots(trade.confidence);
+              const insightHint = getInsightHint(trade, trades);
+
+              return (
+                <div
+                  key={trade.id}
+                  className="card-calm"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    {/* Left side - Trade info */}
+                    <div className="flex-1">
+                      {/* Header row with symbol, badges, and time */}
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <span className="font-semibold text-lg text-foreground">{trade.symbol}</span>
+                        <span className="text-xs px-2 py-0.5 rounded font-medium bg-secondary text-secondary-foreground">
+                          {trade.instrumentType}
+                        </span>
+                        {trade.instrumentType === 'OPTIONS' && trade.optionType && (
+                          <span className="text-xs px-2 py-0.5 rounded font-medium bg-accent text-accent-foreground">
+                            {trade.optionType}
+                          </span>
+                        )}
+                        {trade.exitReason && (
+                          <span className="text-xs px-2 py-0.5 rounded font-medium bg-secondary text-secondary-foreground">
+                            {exitReasonLabels[trade.exitReason]}
+                          </span>
+                        )}
+                        {timeContext && (
+                          <span className="text-xs text-muted-foreground ml-auto">
+                            {timeContext}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Trade details - Single row */}
+                      <div className="flex items-center gap-4 text-sm flex-wrap mb-2">
+                        <span className="text-foreground">
+                          <span className="text-muted-foreground">Qty:</span> <span className="font-medium">{trade.quantity}</span>
+                        </span>
+                        <span className="text-foreground">
+                          <span className="text-muted-foreground">Entry:</span> <span className="font-medium">{formatCurrency(trade.entryPrice)}</span>
+                        </span>
+                        {trade.exitPrice && (
+                          <span className="text-foreground">
+                            <span className="text-muted-foreground">Exit:</span> <span className="font-medium">{formatCurrency(trade.exitPrice)}</span>
+                          </span>
+                        )}
+                        <span className="text-foreground flex items-center gap-1">
+                          <span className="text-muted-foreground">Conf:</span>
+                          <span className="font-medium text-xs tracking-wider" title={`${trade.confidence}/5`}>
+                            {confidenceDots}
+                          </span>
+                        </span>
+                      </div>
+
+                      {/* Behavioral insights row */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* Plan vs Outcome */}
+                        {trade.status === 'closed' && (
+                          <span className="text-xs px-2 py-0.5 rounded font-medium bg-secondary/50 text-muted-foreground">
+                            {withinPlan ? 'Within Plan' : 'Deviated from Plan'}
+                          </span>
+                        )}
+
+                        {/* Behavioral Tag */}
+                        {behavioralTag && (
+                          <span className="text-xs px-2 py-0.5 rounded font-medium bg-secondary/50 text-muted-foreground">
+                            {behavioralTag}
+                          </span>
+                        )}
+
+                        {/* Insight Hint */}
+                        {insightHint && (
+                          <span className="text-xs text-muted-foreground italic">
+                            {insightHint}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right side - P&L display - Compact box */}
+                    {trade.profitLoss !== undefined && (
+                      <div className={`flex flex-col items-center justify-center px-4 py-3 rounded-lg border-2 min-w-[120px] ${
+                        trade.profitLoss > 0
+                          ? 'border-green-500/30 bg-green-500/5'
+                          : trade.profitLoss < 0
+                          ? 'border-red-500/30 bg-red-500/5'
+                          : 'border-border bg-secondary'
+                      }`}>
+                        <div className={`text-xl font-bold mb-1 ${
+                          trade.profitLoss > 0
+                            ? 'text-green-600 dark:text-green-400'
+                            : trade.profitLoss < 0
+                            ? 'text-red-600 dark:text-red-400'
+                            : 'text-foreground'
+                        }`}>
+                          {trade.profitLoss > 0 ? '+' : ''}{formatCurrency(trade.profitLoss)}
+                        </div>
+                        {trade.profitLoss !== 0 && trade.entryPrice && trade.quantity && (
+                          <div className="text-xs text-muted-foreground">
+                            {((Math.abs(trade.profitLoss) / (trade.entryPrice * trade.quantity)) * 100).toFixed(2)}%
+                          </div>
+                        )}
+                      </div>
                     )}
-                    <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                      trade.result === 'win' 
-                        ? 'bg-success/20 text-success' 
-                        : 'bg-destructive/20 text-destructive'
-                    }`}>
-                      {trade.result?.toUpperCase()}
-                    </span>
                   </div>
-                  {trade.exitReason && (
-                    <span className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground">
-                      {exitReasonLabels[trade.exitReason]}
-                    </span>
-                  )}
                 </div>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                  <span>Qty: {trade.quantity}</span>
-                  <span>Confidence: {trade.confidence}/5</span>
-                  <span>Risk: {formatCurrency(trade.riskComfort)}</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

@@ -7,7 +7,7 @@ export interface Trade {
   tradeTime: string; // HH:mm format
   type: 'buy' | 'sell';
   quantity: number;
-  entryPrice?: number;
+  entryPrice: number;
   plannedStop?: number;
   plannedTarget?: number;
   confidence: number;
@@ -15,6 +15,8 @@ export interface Trade {
   reason?: string;
   status: 'open' | 'closed';
   exitReason?: 'target' | 'stop' | 'fear' | 'unsure' | 'impulse';
+  exitPrice?: number;
+  profitLoss?: number;
   exitNote?: string;
   result?: 'win' | 'loss';
   createdAt: Date;
