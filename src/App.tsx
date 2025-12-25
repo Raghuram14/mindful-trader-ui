@@ -12,7 +12,7 @@ import TodayPage from "./pages/TodayPage";
 import AddTradePage from "./pages/AddTradePage";
 import TradeDetailPage from "./pages/TradeDetailPage";
 import ExitTradePage from "./pages/ExitTradePage";
-import InsightsPage from "./pages/InsightsPage";
+import InsightsPage from "./features/insights/pages/InsightsPage";
 import HistoryPage from "./pages/HistoryPage";
 import TradingRulesPage from "./pages/TradingRulesPage";
 import NotFound from "./pages/NotFound";
