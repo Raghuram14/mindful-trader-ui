@@ -13,6 +13,7 @@ import AddTradePage from "./pages/AddTradePage";
 import TradeDetailPage from "./pages/TradeDetailPage";
 import ExitTradePage from "./pages/ExitTradePage";
 import InsightsPage from "./features/insights/pages/InsightsPage";
+import InsightsV2Page from "./features/insights-v2/pages/InsightsV2Page";
 import HistoryPage from "./pages/HistoryPage";
 import TradingRulesPage from "./pages/TradingRulesPage";
 import TradeImportPage from "./features/trade-import/pages/TradeImportPage";
@@ -54,6 +55,7 @@ function AppRoutes() {
       <Route path="/trade/:id" element={<ProtectedRoute><TradeDetailPage /></ProtectedRoute>} />
       <Route path="/exit-trade/:id" element={<ProtectedRoute><ExitTradePage /></ProtectedRoute>} />
       <Route path="/insights" element={<ProtectedRoute><InsightsPage /></ProtectedRoute>} />
+      <Route path="/insights-v2" element={<ProtectedRoute><InsightsV2Page /></ProtectedRoute>} />
       <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
       <Route path="/import" element={<ProtectedRoute><TradeImportPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />

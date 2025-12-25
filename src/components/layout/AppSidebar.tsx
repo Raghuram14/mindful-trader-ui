@@ -3,6 +3,7 @@ import {
   Home,
   Plus,
   BarChart3,
+  Sparkles,
   History,
   Shield,
   LogOut,
@@ -16,7 +17,7 @@ const navItems = [
   { title: "Today", path: "/today", icon: Home },
   { title: "Add Trade", path: "/add-trade", icon: Plus },
   { title: "My Rules", path: "/rules", icon: Shield },
-  { title: "Insights", path: "/insights", icon: BarChart3 },
+  { title: "Insights", path: "/insights-v2", icon: Sparkles },
   { title: "History", path: "/history", icon: History },
 ];
 

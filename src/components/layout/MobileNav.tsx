@@ -1,10 +1,10 @@
-import { Home, Plus, BarChart3, History } from 'lucide-react';
+import { Home, Plus, Sparkles, History } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 
 const navItems = [
   { title: 'Today', path: '/today', icon: Home },
   { title: 'Add', path: '/add-trade', icon: Plus },
-  { title: 'Insights', path: '/insights', icon: BarChart3 },
+  { title: 'Insights', path: '/insights-v2', icon: Sparkles },
   { title: 'History', path: '/history', icon: History },
 ];
 
