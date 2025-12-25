@@ -17,11 +17,11 @@ export function InsightStrengthBadge({ strength, explanation }: InsightStrengthB
   const getStrengthLabel = () => {
     switch (strength) {
       case InsightStrength.STRONG:
-        return 'Strong pattern';
+        return 'Strong pattern · High confidence';
       case InsightStrength.MODERATE:
-        return 'Moderate pattern';
+        return 'Moderate pattern · Medium confidence';
       case InsightStrength.WEAK:
-        return 'Weak signal';
+        return 'Weak signal · Low confidence';
     }
   };
 
@@ -48,12 +48,12 @@ export function InsightStrengthBadge({ strength, explanation }: InsightStrengthB
           </div>
         </TooltipTrigger>
         <TooltipContent>
-          <p className="text-xs max-w-xs">
+          <p className="text-xs max-w-xs font-semibold mb-1">Pattern Strength</p>
+          <p className="text-xs">
             {explanation}
-            <br />
-            <span className="text-muted-foreground mt-1 block">
-              Strength reflects how consistently this behavior appears in your data.
-            </span>
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">
+            Confidence reflects how consistently this pattern appears in your data.
           </p>
         </TooltipContent>
       </Tooltip>

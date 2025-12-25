@@ -6,7 +6,7 @@
 
 import { InsightCardV2 } from '../types/insightV2.types';
 import { InsightStrengthBadge } from './InsightStrengthBadge';
-import { InsightMetricBadge } from '@/features/insights/components/InsightMetricBadge';
+import { InsightMetricBadgeV2 } from './InsightMetricBadgeV2';
 import { Sparkles } from 'lucide-react';
 
 interface PrimaryInsightCardProps {
@@ -52,7 +52,7 @@ export function PrimaryInsightCard({ insight }: PrimaryInsightCardProps) {
       {insight.metrics.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {insight.metrics.map((metric, index) => (
-            <InsightMetricBadge key={index} metric={metric} />
+            <InsightMetricBadgeV2 key={index} metric={metric} />
           ))}
         </div>
       )}

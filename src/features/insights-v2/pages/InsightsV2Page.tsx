@@ -14,6 +14,7 @@ import { BehavioralSnapshotCard } from '../components/BehavioralSnapshotCard';
 import { PrimaryInsightCard } from '../components/PrimaryInsightCard';
 import { InsightGroup } from '../components/InsightGroup';
 import { DataCoverageNote } from '../components/DataCoverageNote';
+import { TodaysFocusStrip } from '../components/TodaysFocusStrip';
 import { InsightRange, InsightCategory } from '../types/insightV2.types';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSearchParams } from 'react-router-dom';
@@ -98,11 +99,17 @@ export default function InsightsV2Page() {
 
             {/* Primary Insights */}
             {insightsResponse.prioritizedInsights.length > 0 && (
-              <div>
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-foreground">Key Behavioral Focus</h2>
                 {insightsResponse.prioritizedInsights.map((insight) => (
                   <PrimaryInsightCard key={insight.id} insight={insight} />
                 ))}
               </div>
+            )}
+
+            {/* Today's Focus Strip */}
+            {insightsResponse.prioritizedInsights.length > 0 && (
+              <TodaysFocusStrip prioritizedInsights={insightsResponse.prioritizedInsights} />
             )}
 
             {/* Empty State */}

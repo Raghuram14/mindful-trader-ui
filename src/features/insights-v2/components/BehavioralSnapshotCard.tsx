@@ -125,12 +125,21 @@ export function BehavioralSnapshotCard({ snapshot }: BehavioralSnapshotCardProps
         <div className="flex items-start gap-3">
           {snapshot.consistencyScore >= 60 ? (
             <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+          ) : snapshot.consistencyScore === 0 && snapshot.evaluatedTrades < 8 ? (
+            <TrendingDown className="w-5 h-5 text-muted-foreground" />
           ) : (
             <TrendingDown className="w-5 h-5 text-amber-600 dark:text-amber-400" />
           )}
           <div>
             <p className="text-sm text-muted-foreground">Consistency</p>
-            <p className="text-base font-medium text-foreground">{snapshot.consistencyScore}%</p>
+            {snapshot.consistencyScore === 0 && snapshot.evaluatedTrades < 8 ? (
+              <>
+                <p className="text-xs text-muted-foreground italic">Cannot be assessed yet</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Needs more trades</p>
+              </>
+            ) : (
+              <p className="text-base font-medium text-foreground">{snapshot.consistencyScore}%</p>
+            )}
           </div>
         </div>
       </div>

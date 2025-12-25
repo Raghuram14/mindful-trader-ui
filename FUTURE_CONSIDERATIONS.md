@@ -394,3 +394,273 @@ These features violate the product philosophy and should NOT be added:
 **Last Updated:** December 2024  
 **Next Review:** Quarterly
 
+**Phase-3**
+
+Absolutely. Below is a **clean, structured, future-proof set of notes** you can keep as your **Phase-2 / Phase-3 product blueprint**. This goes deeper than feature lists — it explains **what to build, why it matters, how it works, and what it unlocks later**.
+
+Use this as your internal product doc.
+
+---
+
+# 🔮 MindfulTrade — High-Value Features to Build Later (Detailed Notes)
+
+> **Product North Star:**
+> Help traders *behave better* at the moment it matters — before, during, and after trades — not predict markets.
+
+---
+
+## 1️⃣ Behavioral Risk Budget (Core Monetizable Feature)
+
+### What it is
+
+A **live, depleting behavioral budget** that represents how much room a trader has left *today / this week* before they start violating their own rules or emotional limits.
+
+This is **not money alone** — it’s a composite of:
+
+* Risk capital
+* Emotional tolerance
+* Rule discipline
+
+### What to show (UI)
+
+A compact card on **Today** and **Add Trade** pages:
+
+* **Daily Risk Used:** `₹3,200 / ₹5,000`
+* **Rule Violations Remaining:** `1 of 3`
+* **Loss Tolerance Remaining:** `35%`
+* **Behavioral State:** `Caution / Elevated / Critical`
+
+Color-coded, calm, non-alarming.
+
+### How it works (logic)
+
+Budget is consumed by:
+
+* Risk taken per trade
+* Losses
+* Rule violations
+* Rapid trade frequency
+* Trading after predefined stop conditions
+
+Example:
+
+```
+Risk Budget = 
+  (daily loss limit %) +
+  (allowed losing trades) +
+  (max trades per session)
+```
+
+Each action deducts from the budget.
+
+### Why it’s powerful
+
+* Traders **see limits before breaking them**
+* Shifts mindset from “one more trade” → “is this worth my remaining budget?”
+* Very hard to replicate without deep behavioral modeling
+
+### Later extensions
+
+* Weekly / monthly budgets
+* Auto-lock trading after critical breach (soft lock)
+* Budget recovery rules (cool-down restores capacity)
+
+---
+
+## 2️⃣ “If You Trade Now…” Contextual Warnings (Moment-of-Action Nudges)
+
+### What it is
+
+A **real-time behavioral mirror** shown *before* a trade is placed — not a prediction, but a reminder based on personal history.
+
+### Example messages
+
+* “After 2 losses, your next trade loses 71% of the time.”
+* “You’re trading faster than usual after a loss.”
+* “This trade exceeds your typical position size during drawdowns.”
+
+### Where it appears
+
+* Add Trade screen
+* Confirm Trade modal
+* Optional toast warnings
+
+### How it works
+
+Uses **conditional pattern matching**, not ML initially:
+
+* Time since last loss
+* Number of trades in session
+* Risk vs historical comfort
+* Rule breach proximity
+
+### Why it’s valuable
+
+* Intercepts bad behavior *before execution*
+* Feels like a **coach whispering**, not a system blocking
+* Strong habit-forming loop
+
+### Later extensions
+
+* User-configurable warning sensitivity
+* “Ignore anyway” tracking → insight later
+* Adaptive tone (firm vs gentle)
+
+---
+
+## 3️⃣ Personal Anti-Patterns Dashboard (Your Behavioral DNA)
+
+### What it is
+
+A **short, brutally honest list of the trader’s top 3 recurring self-sabotage patterns**.
+
+Not analytics. Not charts. Just truths.
+
+### Example patterns
+
+* “You overtrade after your first loss.”
+* “You exit winners early when confident.”
+* “You increase position size after a win streak.”
+
+### UI rules
+
+* Always visible
+* Max **3 items**
+* Simple language
+* Stable over time (don’t reshuffle daily)
+
+### How it’s generated
+
+Based on:
+
+* Frequency × impact
+* Consistency across weeks
+* Financial + behavioral damage
+
+### Why it matters
+
+* Humans can only actively correct **2–3 behaviors**
+* Creates **identity-level awareness**
+* Builds trust (“this app understands me”)
+
+### Later extensions
+
+* “Working on” flag
+* Progress tracking per pattern
+* Coach challenges tied to patterns
+
+---
+
+## 4️⃣ Progression Over Time (Coaching Arc, Not P&L)
+
+### What it is
+
+A **behavioral improvement timeline**, not performance forecasting.
+
+### Metrics to track
+
+* Rule adherence %
+* Early exit rate
+* Revenge trading frequency
+* Risk discipline score
+* Average decision delay after loss
+
+### UI concept
+
+A clean progression view:
+
+* “You vs Last Month”
+* Green arrows for discipline, not profits
+* Weekly summaries, not daily noise
+
+### Why it’s powerful
+
+* Reinforces *process over outcome*
+* Keeps users engaged during drawdowns
+* Encourages long-term usage
+
+### Key rule
+
+Never frame this as:
+❌ “Your returns are improving”
+
+Always frame as:
+✅ “Your decision quality is improving”
+
+### Later extensions
+
+* Milestones (“30 days without revenge trading”)
+* Behavioral streaks
+* Coach-style reflections
+
+---
+
+## 5️⃣ Insight Trust Score & Data Confidence (Credibility Layer)
+
+### What it is
+
+Every insight carries a **confidence label** explaining *how reliable it is*.
+
+### Example
+
+> **Confidence: Medium**
+> Based on 14 trades, 62% data completeness
+
+### Inputs
+
+* Number of trades
+* Completeness flags:
+
+  * Planned stop?
+  * Declared intent?
+  * Risk amount?
+* Time range consistency
+
+### Why it’s critical
+
+* Prevents users over-trusting weak insights
+* Builds transparency and credibility
+* Reduces support & confusion later
+
+### UI treatment
+
+* Subtle badge
+* Expandable “Why?” explanation
+* Never alarming or apologetic
+
+### Later extensions
+
+* Encourage users to improve data quality
+* Unlock stronger insights with better logging
+* Premium gating based on confidence thresholds
+
+---
+
+## 🔑 Strategic Insight (Important)
+
+Notice something common across all features:
+
+> None of them predict markets.
+> All of them **shape behavior at decision time**.
+
+That’s why:
+
+* They’re defensible
+* They’re hard to copy
+* They justify payment later
+
+---
+
+## Suggested Internal Tagging (for future roadmap)
+
+You can tag features internally like this:
+
+* `CORE_BEHAVIORAL`
+* `MOMENT_OF_ACTION`
+* `COACHING_LAYER`
+* `PREMIUM_CANDIDATE`
+* `DATA_QUALITY_DEPENDENT`
+
+This helps you decide what ships when.
+
+---

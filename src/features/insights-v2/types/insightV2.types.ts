@@ -40,9 +40,12 @@ export enum InsightCategory {
 
 export interface MetricSnapshot {
   name: string;
-  value: number;
+  value: number | null; // Can be null if unreliable
+  displayValue: string; // Always a string for display
   unit?: string;
   trend?: "UP" | "DOWN" | "STABLE";
+  isReliable: boolean;
+  reason?: string; // Explanation if unreliable
 }
 
 export interface DataCoverage {
@@ -55,6 +58,11 @@ export interface ObservedOver {
   trades: number;
   sessions: number;
   period: InsightRange;
+}
+
+export interface GroupContext {
+  groupTitle: string;
+  groupDescription: string;
 }
 
 export interface InsightCardV2 {
@@ -72,6 +80,8 @@ export interface InsightCardV2 {
   generatedAt: string;
   observedOver: ObservedOver;
   priorityScore: number;
+  actionPriority: 'FOCUS_NOW' | 'WATCH' | 'AWARENESS';
+  groupContext?: GroupContext; // For grouping related insights
 }
 
 export interface BehavioralSnapshot {
