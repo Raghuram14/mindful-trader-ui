@@ -22,6 +22,11 @@ export interface Trade {
   createdAt: Date;
   closedAt?: Date;
   emotions?: ('fear' | 'neutral' | 'confident')[];
+  source?: 'MANUAL' | 'IMPORTED';
+  dataCompleteness?: {
+    hasPlannedRisk: boolean;
+    hasDeclaredIntent: boolean;
+  };
 }
 
 export const mockTrades: Trade[] = [

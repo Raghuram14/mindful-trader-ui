@@ -25,6 +25,11 @@ export interface TradeResponse {
   emotions?: Trade['emotions'];
   createdAt: string;
   closedAt?: string;
+  source?: 'MANUAL' | 'IMPORTED';
+  dataCompleteness?: {
+    hasPlannedRisk: boolean;
+    hasDeclaredIntent: boolean;
+  };
 }
 
 export interface CreateTradeRequest {

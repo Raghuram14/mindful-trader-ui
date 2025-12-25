@@ -1,8 +1,17 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useTrades } from '@/context/TradeContext';
 import { formatCurrency, Trade } from '@/lib/mockData';
-import { Filter } from 'lucide-react';
+import { Filter, Upload, Info } from 'lucide-react';
+import { DataConfidenceBanner } from '@/features/trade-import/components/DataConfidenceBanner';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   getBehavioralTag,
   isWithinPlan,
@@ -27,6 +36,11 @@ export default function HistoryPage() {
   const [filterConfidence, setFilterConfidence] = useState<number | 'all'>('all');
   const [showFilters, setShowFilters] = useState(false);
 
+  // Calculate imported trade counts for banner
+  const importedTradeCount = useMemo(() => {
+    return closedTrades.filter(t => t.source === 'IMPORTED').length;
+  }, [closedTrades]);
+
   const filteredTrades = closedTrades.filter(trade => {
     if (filterReason !== 'all' && trade.exitReason !== filterReason) return false;
     if (filterConfidence !== 'all' && trade.confidence !== filterConfidence) return false;
@@ -42,16 +56,32 @@ export default function HistoryPage() {
               <h1 className="page-title">Trade History</h1>
               <p className="page-subtitle mt-1">Review your past trades</p>
             </div>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`p-2 rounded-lg transition-colors ${
-                showFilters ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-              }`}
-            >
-              <Filter className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-3">
+              <Link to="/import">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Upload className="w-4 h-4" />
+                  Import trades
+                </Button>
+              </Link>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`p-2 rounded-lg transition-colors ${
+                  showFilters ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                }`}
+              >
+                <Filter className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </header>
+
+        {/* Data Confidence Banner */}
+        {importedTradeCount > 0 && (
+          <DataConfidenceBanner
+            importedTradeCount={importedTradeCount}
+            totalTradeCount={closedTrades.length}
+          />
+        )}
 
         {/* Filters */}
         {showFilters && (
@@ -94,7 +124,16 @@ export default function HistoryPage() {
         {/* Trade List */}
         {filteredTrades.length === 0 ? (
           <div className="card-calm text-center py-12">
-            <p className="text-muted-foreground">No closed trades yet</p>
+            <p className="text-muted-foreground mb-4">No closed trades yet</p>
+            <Link to="/import">
+              <Button variant="outline" className="gap-2">
+                <Upload className="w-4 h-4" />
+                Import trades from broker
+              </Button>
+            </Link>
+            <p className="text-xs text-muted-foreground mt-2">
+              Supports Equity & Futures/Options CSVs
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -123,6 +162,25 @@ export default function HistoryPage() {
                           <span className="text-xs px-2 py-0.5 rounded font-medium bg-accent text-accent-foreground">
                             {trade.optionType}
                           </span>
+                        )}
+                        {trade.source === 'IMPORTED' && (
+                          <span className="text-xs px-2 py-0.5 rounded font-medium bg-muted text-muted-foreground">
+                            Imported
+                          </span>
+                        )}
+                        {trade.dataCompleteness?.hasDeclaredIntent === false && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="cursor-help inline-flex items-center">
+                                  <Info className="w-3 h-3 text-muted-foreground" />
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">Planned stop/target not available for this trade</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                         {trade.exitReason && (
                           <span className="text-xs px-2 py-0.5 rounded font-medium bg-secondary text-secondary-foreground">

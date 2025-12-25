@@ -9,6 +9,8 @@ import { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Loader2 } from 'lucide-react';
 import { useInsights } from '../hooks/useInsights';
+import { useTrades } from '@/context/TradeContext';
+import { DataConfidenceBanner } from '@/features/trade-import/components/DataConfidenceBanner';
 import { InsightTabs } from '../components/InsightTabs';
 import { InsightHeroCard } from '../components/InsightHeroCard';
 import { InsightCategoryGroup } from '../components/InsightCategoryGroup';
@@ -18,6 +20,12 @@ import { InsightRange, InsightCard } from '../types/insight.types';
 export default function InsightsPage() {
   const [range, setRange] = useState<InsightRange>('TODAY');
   const { data: insights, loading, error } = useInsights(range);
+  const { trades } = useTrades();
+
+  // Calculate imported trade counts for banner
+  const importedTradeCount = useMemo(() => {
+    return trades.filter(t => t.source === 'IMPORTED').length;
+  }, [trades]);
 
   // Group insights by category
   const groupedInsights = useMemo(() => {
@@ -70,6 +78,23 @@ export default function InsightsPage() {
         <div className="mb-8">
           <InsightTabs value={range} onValueChange={setRange} />
         </div>
+
+        {/* Data Confidence Banner */}
+        {importedTradeCount > 0 && (
+          <div className="mb-8">
+            <DataConfidenceBanner
+              importedTradeCount={importedTradeCount}
+              totalTradeCount={trades.length}
+            />
+            {insights && insights.length > 0 && (
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                {importedTradeCount === trades.length
+                  ? 'Insights are based on executed trades. Plan-based patterns may be limited.'
+                  : 'Insights combine manual and imported trades.'}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Loading State */}
         {loading && (

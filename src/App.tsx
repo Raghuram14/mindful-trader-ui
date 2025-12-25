@@ -15,6 +15,7 @@ import ExitTradePage from "./pages/ExitTradePage";
 import InsightsPage from "./features/insights/pages/InsightsPage";
 import HistoryPage from "./pages/HistoryPage";
 import TradingRulesPage from "./pages/TradingRulesPage";
+import TradeImportPage from "./features/trade-import/pages/TradeImportPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ function AppRoutes() {
       <Route path="/exit-trade/:id" element={<ProtectedRoute><ExitTradePage /></ProtectedRoute>} />
       <Route path="/insights" element={<ProtectedRoute><InsightsPage /></ProtectedRoute>} />
       <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+      <Route path="/import" element={<ProtectedRoute><TradeImportPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

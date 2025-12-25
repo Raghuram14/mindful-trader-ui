@@ -6,6 +6,7 @@ import { useAuth } from '@/auth/auth.context';
 interface TradeContextType {
   trades: Trade[];
   isLoading: boolean;
+  loadTrades: () => Promise<void>;
   addTrade: (trade: Omit<Trade, 'id' | 'createdAt' | 'status'>) => Promise<void>;
   closeTrade: (id: string, exitReason: Trade['exitReason'], exitPrice: number, exitNote?: string) => Promise<void>;
   updateTradeEmotion: (id: string, emotion: 'fear' | 'neutral' | 'confident') => Promise<void>;
@@ -51,6 +52,8 @@ export function TradeProvider({ children }: { children: ReactNode }) {
         emotions: trade.emotions,
         createdAt: new Date(trade.createdAt),
         closedAt: trade.closedAt ? new Date(trade.closedAt) : undefined,
+        source: trade.source,
+        dataCompleteness: trade.dataCompleteness,
       }));
       
       setTrades(mappedTrades);
@@ -228,6 +231,7 @@ export function TradeProvider({ children }: { children: ReactNode }) {
       value={{
         trades,
         isLoading,
+        loadTrades,
         addTrade,
         closeTrade,
         updateTradeEmotion,
