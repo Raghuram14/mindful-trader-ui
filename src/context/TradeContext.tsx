@@ -121,6 +121,9 @@ export function TradeProvider({ children }: { children: ReactNode }) {
       };
 
       setTrades(prev => [newTrade, ...prev]);
+      
+      // Emit event for coaching refresh
+      window.dispatchEvent(new CustomEvent('trade-created', { detail: { trade: newTrade } }));
     } catch (error) {
       console.error('Failed to create trade:', error);
       throw error;
@@ -165,6 +168,14 @@ export function TradeProvider({ children }: { children: ReactNode }) {
       setTrades(prev =>
         prev.map(trade => (trade.id === id ? closedTrade : trade))
       );
+      
+      // Emit event for coaching refresh (especially important for losses)
+      window.dispatchEvent(new CustomEvent('trade-closed', { 
+        detail: { 
+          trade: closedTrade,
+          isLoss: closedTrade.result === 'loss'
+        } 
+      }));
     } catch (error) {
       console.error('Failed to close trade:', error);
       throw error;

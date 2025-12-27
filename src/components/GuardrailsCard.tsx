@@ -18,7 +18,7 @@ export function GuardrailsCard() {
               Today's Guardrails
             </p>
             <p className="text-xs text-muted-foreground mb-2">
-              Your self-defined limits for today
+              The limits you've set to support today's decisions
             </p>
             <p className="text-sm text-muted-foreground mb-3">
               You haven't set any trading rules yet.
@@ -106,7 +106,7 @@ export function GuardrailsCard() {
       return "You've reached a limit you set to protect yourself.";
     }
     if (status.status === "WARNING") {
-      return "You're close to a limit you set for today.";
+      return "You're approaching a limit you set to protect today's capital.";
     }
     return null;
   };
@@ -126,7 +126,7 @@ export function GuardrailsCard() {
             Today's Guardrails
           </p>
           <p className="text-xs text-muted-foreground">
-            Your self-defined limits for today
+            The limits you've set to support today's decisions
           </p>
         </div>
       </div>

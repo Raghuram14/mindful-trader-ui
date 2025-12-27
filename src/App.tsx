@@ -9,6 +9,7 @@ import { RulesProvider } from "@/context/RulesContext";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import TodayPage from "./pages/TodayPage";
+import CoachingPage from "./features/coaching/pages/CoachingPage";
 import AddTradePage from "./pages/AddTradePage";
 import TradeDetailPage from "./pages/TradeDetailPage";
 import ExitTradePage from "./pages/ExitTradePage";
@@ -49,7 +50,7 @@ function AppRoutes() {
         path="/auth"
         element={isAuthenticated ? <Navigate to="/today" replace /> : <AuthPage />}
       />
-      <Route path="/today" element={<ProtectedRoute><TodayPage /></ProtectedRoute>} />
+      <Route path="/today" element={<ProtectedRoute><CoachingPage /></ProtectedRoute>} />
       <Route path="/add-trade" element={<ProtectedRoute><AddTradePage /></ProtectedRoute>} />
       <Route path="/rules" element={<ProtectedRoute><TradingRulesPage /></ProtectedRoute>} />
       <Route path="/trade/:id" element={<ProtectedRoute><TradeDetailPage /></ProtectedRoute>} />
