@@ -59,6 +59,18 @@ export interface CloseTradeRequest {
   exitReason: Trade['exitReason'];
   exitPrice: number;
   exitNote?: string;
+  emotions?: Trade['emotions'];
+  closedAt?: string; // ISO string for exit date/time
+}
+
+export interface CloseTradeResponse extends TradeResponse {
+  planAdherence?: 'followed' | 'deviated' | 'no_plan';
+  ruleBreaches?: Array<{
+    ruleId: string;
+    ruleType: string;
+    message: string;
+  }>;
+  nudgeMessage?: string;
 }
 
 export const tradesApi = {
@@ -86,8 +98,8 @@ export const tradesApi = {
     return apiClient.patch<TradeResponse>(`/trades/${id}`, data);
   },
 
-  closeTrade: async (id: string, data: CloseTradeRequest): Promise<TradeResponse> => {
-    return apiClient.post<TradeResponse>(`/trades/${id}/close`, data);
+  closeTrade: async (id: string, data: CloseTradeRequest): Promise<CloseTradeResponse> => {
+    return apiClient.post<CloseTradeResponse>(`/trades/${id}/close`, data);
   },
 
   deleteTrade: async (id: string): Promise<void> => {

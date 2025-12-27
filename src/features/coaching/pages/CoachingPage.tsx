@@ -111,6 +111,18 @@ export default function CoachingPage() {
               <CoachingGuidance guidance={guidance} />
             )}
 
+            {/* Empty State - No guidance yet */}
+            {!guidance && hasCheckedToday && (
+              <div className="rounded-lg border border-border bg-muted/20 p-12 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Generating your daily guidance...
+                </p>
+              </div>
+            )}
+
+            {/* Today's Guardrails */}
+            <GuardrailsCard />
+
             {/* Open Trades - Condensed View */}
             {openTrades.length > 0 && (
               <div className="rounded-lg border border-border bg-card p-4">
@@ -121,12 +133,14 @@ export default function CoachingPage() {
                       Open trades: {openTrades.length}
                     </span>
                   </div>
-                  <Link
-                    to="/history"
-                    className="text-xs text-primary hover:text-primary/80 hover:underline"
-                  >
-                    View all
-                  </Link>
+                  {openTrades.length > 3 && (
+                    <Link
+                      to="/history"
+                      className="text-xs text-primary hover:text-primary/80 hover:underline"
+                    >
+                      View all
+                    </Link>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
@@ -161,18 +175,6 @@ export default function CoachingPage() {
                 </div>
               </div>
             )}
-
-            {/* Empty State - No guidance yet */}
-            {!guidance && hasCheckedToday && (
-              <div className="rounded-lg border border-border bg-muted/20 p-12 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Generating your daily guidance...
-                </p>
-              </div>
-            )}
-
-            {/* Today's Guardrails - Show at bottom */}
-            <GuardrailsCard />
 
             {/* Quick Actions */}
             <div className="flex flex-col sm:flex-row gap-3">

@@ -18,12 +18,7 @@ export default function TodayPage() {
           <p className="page-subtitle mt-1">Stay aligned with your plan</p>
         </header>
 
-        {/* Today's Guardrails - PRIMARY */}
-        <div className="mb-6">
-          <GuardrailsCard />
-        </div>
-
-        {/* Behavioral Reminder */}
+        {/* Trade Focus - Behavioral Reminder */}
         <div className="card-calm border-l-2 border-l-warning/50 mb-6">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
@@ -36,18 +31,14 @@ export default function TodayPage() {
           </div>
         </div>
 
-        {/* Add Trade CTA */}
-        <Link
-          to="/add-trade"
-          className="flex items-center justify-center gap-3 btn-primary w-full mb-6 py-4"
-        >
-          <Plus className="w-5 h-5" />
-          Add Trade
-        </Link>
+        {/* Today's Guardrails */}
+        <div className="mb-6">
+          <GuardrailsCard />
+        </div>
 
-        {/* Open Trades - CONDENSED */}
+        {/* Open Trades */}
         {openTrades.length > 0 && (
-          <div className="card-calm">
+          <div className="card-calm mb-6">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-muted-foreground" />
@@ -88,6 +79,24 @@ export default function TodayPage() {
             </div>
           </div>
         )}
+
+        {/* CTAs */}
+        <div className="space-y-3">
+          <Link
+            to="/add-trade"
+            className="flex items-center justify-center gap-3 btn-primary w-full py-4"
+          >
+            <Plus className="w-5 h-5" />
+            Add Trade
+          </Link>
+          <Link
+            to="/insights"
+            className="flex items-center justify-center gap-3 btn-secondary w-full py-4"
+          >
+            <TrendingUp className="w-5 h-5" />
+            Insights
+          </Link>
+        </div>
       </div>
     </AppLayout>
   );

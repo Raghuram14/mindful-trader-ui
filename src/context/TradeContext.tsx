@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { Trade } from '@/lib/mockData';
-import { tradesApi, TradeResponse } from '@/api/trades';
+import { tradesApi, TradeResponse, CloseTradeResponse } from '@/api/trades';
 import { useAuth } from '@/auth/auth.context';
 
 interface TradeContextType {
@@ -8,7 +8,14 @@ interface TradeContextType {
   isLoading: boolean;
   loadTrades: () => Promise<void>;
   addTrade: (trade: Omit<Trade, 'id' | 'createdAt' | 'status'>) => Promise<void>;
-  closeTrade: (id: string, exitReason: Trade['exitReason'], exitPrice: number, exitNote?: string) => Promise<void>;
+  closeTrade: (
+    id: string, 
+    exitReason: Trade['exitReason'], 
+    exitPrice: number, 
+    exitNote?: string,
+    emotions?: Trade['emotions'],
+    closedAt?: Date | string
+  ) => Promise<CloseTradeResponse>;
   updateTradeEmotion: (id: string, emotion: 'fear' | 'neutral' | 'confident') => Promise<void>;
   getOpenTrades: () => Trade[];
   getClosedTrades: () => Trade[];
@@ -130,12 +137,26 @@ export function TradeProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const closeTrade = async (id: string, exitReason: Trade['exitReason'], exitPrice: number, exitNote?: string): Promise<void> => {
+  const closeTrade = async (
+    id: string, 
+    exitReason: Trade['exitReason'], 
+    exitPrice: number, 
+    exitNote?: string,
+    emotions?: Trade['emotions'],
+    closedAt?: Date | string
+  ): Promise<CloseTradeResponse> => {
     try {
+      // Convert closedAt to ISO string if provided
+      const closedAtISO = closedAt 
+        ? (typeof closedAt === 'string' ? closedAt : closedAt.toISOString())
+        : undefined;
+
       const closed = await tradesApi.closeTrade(id, {
         exitReason,
         exitPrice,
         exitNote,
+        emotions,
+        closedAt: closedAtISO,
       });
 
       // Map API response to Trade format
@@ -176,6 +197,9 @@ export function TradeProvider({ children }: { children: ReactNode }) {
           isLoss: closedTrade.result === 'loss'
         } 
       }));
+
+      // Return the full response with behavioral context
+      return closed;
     } catch (error) {
       console.error('Failed to close trade:', error);
       throw error;
