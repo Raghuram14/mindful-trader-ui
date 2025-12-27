@@ -15,6 +15,7 @@ import { PrimaryInsightCard } from '../components/PrimaryInsightCard';
 import { InsightGroup } from '../components/InsightGroup';
 import { DataCoverageNote } from '../components/DataCoverageNote';
 import { TodaysFocusStrip } from '../components/TodaysFocusStrip';
+import { AdvancedMetricsCard } from '../components/AdvancedMetricsCard';
 import { InsightRange, InsightCategory } from '../types/insightV2.types';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSearchParams } from 'react-router-dom';
@@ -88,50 +89,54 @@ export default function InsightsV2Page() {
 
         {/* Content */}
         {!loading && !error && insightsResponse && (
-          <div className="space-y-8 max-w-4xl mx-auto">
-            {/* Behavioral Snapshot */}
+          <div className="space-y-6 max-w-5xl mx-auto">
+            {/* HERO - Today's Focus Strip (at top) */}
+            {insightsResponse.prioritizedInsights.length > 0 && (
+              <TodaysFocusStrip prioritizedInsights={insightsResponse.prioritizedInsights} />
+            )}
+
+            {/* Compact Behavioral Snapshot */}
             <BehavioralSnapshotCard snapshot={insightsResponse.snapshot} />
+
+            {/* Advanced Metrics (if available) */}
+            <AdvancedMetricsCard snapshot={insightsResponse.snapshot} />
 
             {/* Data Coverage Note */}
             {!insightsResponse.dataCoverage.sufficient && (
               <DataCoverageNote dataCoverage={insightsResponse.dataCoverage} />
             )}
 
-            {/* Primary Insights */}
+            {/* Primary Insights (Collapsed by default) */}
             {insightsResponse.prioritizedInsights.length > 0 && (
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-foreground">Key Behavioral Focus</h2>
                 {insightsResponse.prioritizedInsights.map((insight) => (
                   <PrimaryInsightCard key={insight.id} insight={insight} />
                 ))}
               </div>
             )}
 
-            {/* Today's Focus Strip */}
-            {insightsResponse.prioritizedInsights.length > 0 && (
-              <TodaysFocusStrip prioritizedInsights={insightsResponse.prioritizedInsights} />
-            )}
-
             {/* Empty State */}
             {insightsResponse.prioritizedInsights.length === 0 && 
              Object.values(insightsResponse.groupedInsights).every(group => group.length === 0) && (
-              <div className="card-calm text-center py-12">
+              <div className="rounded-lg border border-border bg-muted/20 p-12 text-center">
                 <p className="text-sm text-muted-foreground">
                   {insightsResponse.dataCoverage.sufficient
-                    ? 'No behavioral patterns detected at this time.'
+                    ? 'No behavioral patterns detected at this time. Keep trading mindfully.'
                     : 'Not enough data yet. Insights will appear as you record more trades.'}
                 </p>
               </div>
             )}
 
-            {/* Grouped Insights */}
-            {Object.entries(insightsResponse.groupedInsights).map(([category, insights]) => (
-              <InsightGroup
-                key={category}
-                category={category as InsightCategory}
-                insights={insights}
-              />
-            ))}
+            {/* Secondary Grouped Insights (Collapsed) */}
+            {Object.entries(insightsResponse.groupedInsights).map(([category, insights]) => 
+              insights.length > 0 && (
+                <InsightGroup
+                  key={category}
+                  category={category as InsightCategory}
+                  insights={insights}
+                />
+              )
+            )}
           </div>
         )}
       </div>

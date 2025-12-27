@@ -454,3 +454,109 @@ Build with restraint, empathy, and clarity.
 
 **Trading rules are seatbelts, not speed limiters.**
 They protect during emotional moments, but never control.
+
+---
+
+## 14. Advanced Metrics UX - Critical Rules
+
+### Always Provide Context
+
+**Every metric MUST have a tooltip explaining:**
+1. What it measures
+2. How it's calculated (simplified)
+3. What's "good" vs "bad"
+4. Minimum data requirements
+
+```tsx
+// BAD: No explanation
+<MetricRow label="Fear Index" value={51} />
+
+// GOOD: Tooltip with context
+<MetricRow 
+  label="Fear Index" 
+  value={51}
+  tooltip="Measures position size reduction after losses. Higher = more fear-driven decisions."
+/>
+```
+
+### Handle Insufficient Data Gracefully
+
+**Don't show misleading data:**
+
+```tsx
+// BAD: Shows "best" and "worst" as same hours
+{bestHours.length > 0 && <div>Best: {bestHours}</div>}
+
+// GOOD: Show helpful message when insufficient
+{bestHours.length > 0 ? (
+  <div>Best: {bestHours}</div>
+) : (
+  <div className="text-xs text-muted-foreground italic">
+    Need more trades across different hours to identify patterns
+  </div>
+)}
+```
+
+### Complex Metrics Need Clear Explanations
+
+**Capital Efficiency is confusing - explain it:**
+
+- **Profit Factor**: Not obvious what >1 means
+- **Expectancy**: Users don't know the formula
+- **Trade ROI**: Confused with account ROI
+- **Capital Utilization**: Is 15% good or bad?
+
+**Solution:** Provide ranges and benchmarks in tooltips.
+
+### Recovery Time - Special Consideration
+
+**Only show if meaningful:**
+```tsx
+// BAD: Shows "0 min" or huge numbers
+<MetricRow label="Recovery Time" value={0} />
+
+// GOOD: Conditional rendering
+{recoveryTime > 0 && (
+  <MetricRow label="Recovery Time" value={recoveryTime} />
+)}
+```
+
+### Visual Hierarchy for Metrics
+
+**Group by importance and relatedness:**
+
+1. **Emotional Intelligence** - Most actionable
+2. **Capital Efficiency** - Performance insight
+3. **Trading Patterns** - Optimization
+4. **Momentum & Streaks** - Awareness
+
+### Color Psychology (Critical)
+
+**Never use harsh colors:**
+
+```tsx
+// BAD: Alarming red for stress
+className="text-red-600"
+
+// GOOD: Muted amber for warning
+className="text-amber-600"
+```
+
+**Follow product philosophy:** Calm coach, not judge.
+
+---
+
+## Final Instruction to AI
+
+**This product is a mirror, not a scoreboard.**
+Build with restraint, empathy, and clarity.
+
+**Trading rules are seatbelts, not speed limiters.**
+They protect during emotional moments, but never control.
+
+**Metrics need context, or they're just numbers.**
+Every metric must help the trader understand themselves, not just show data.
+
+---
+
+**Last Updated:** December 26, 2025

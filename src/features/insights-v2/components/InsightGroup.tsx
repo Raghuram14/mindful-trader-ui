@@ -99,11 +99,16 @@ export function InsightGroup({ category, insights }: InsightGroupProps) {
 
   // Default: no grouping
   return (
-    <div className="mb-8">
-      <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wide">
-        {getCategoryLabel()}
-      </h3>
-      <div className="space-y-4">
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          {getCategoryLabel()}
+        </h3>
+        <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
+          {insights.length}
+        </span>
+      </div>
+      <div className="space-y-3">
         {insights.map((insight) => (
           <InsightCardV2 key={insight.id} insight={insight} />
         ))}

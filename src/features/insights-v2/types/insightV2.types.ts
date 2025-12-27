@@ -91,6 +91,43 @@ export interface BehavioralSnapshot {
   consistencyScore: number; // 0-100
   evaluatedTrades: number;
   period: InsightRange;
+  // Advanced metrics (optional - requires sufficient data)
+  emotional?: {
+    fearIndex: number;
+    greedIndex: number;
+    fomoScore: number;
+    stressLevel: number;
+    emotionalConsistency: number;
+    recoveryTime: number;
+  };
+  efficiency?: {
+    profitFactor: number;
+    expectancy: number;
+    tradeROI: number;
+    capitalUtilization: number;
+  };
+  timing?: {
+    bestTradingHours: number[];
+    worstTradingHours: number[];
+    sessionFatigueDetected: boolean;
+  };
+  streak?: {
+    currentStreak: { type: 'WIN' | 'LOSS'; count: number };
+    longestWinStreak: number;
+    longestLossStreak: number;
+  };
+  advancedRisk?: {
+    maxDrawdown: number;
+    maxDrawdownPercent: number;
+    maxDrawdownDuration: number;
+    sharpeRatio: number;
+    sortinoRatio: number;
+    valueAtRisk95: number;
+    expectedShortfall: number;
+    kellyPercentage: number;
+    riskOfRuin: number;
+    exposureByInstrument: Record<string, number>;
+  };
 }
 
 export interface InsightsResponseV2 {

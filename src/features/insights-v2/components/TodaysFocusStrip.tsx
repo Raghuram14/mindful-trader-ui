@@ -1,81 +1,76 @@
 /**
  * Today's Focus Strip
  * 
- * Converts FOCUS_NOW insights into actionable behaviors
+ * HERO element - single most important action for today
+ * Minimal, glanceable, action-oriented
  */
 
 import { InsightCardV2 } from '../types/insightV2.types';
 import { Target } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 
 interface TodaysFocusStripProps {
   prioritizedInsights: InsightCardV2[];
 }
 
 /**
- * Extract actionable behaviors from insights
+ * Extract the single most important action
  */
-function extractActions(insights: InsightCardV2[]): string[] {
-  const actions: string[] = [];
-
+function extractPrimaryAction(insights: InsightCardV2[]): string | null {
   for (const insight of insights) {
     if (insight.actionPriority !== 'FOCUS_NOW') continue;
 
-    // Extract action from recommendation
     const recommendation = insight.recommendation;
     
-    // Simple extraction: look for imperative verbs and time-based actions
-    if (recommendation.includes('Take a break') || recommendation.includes('Wait')) {
-      actions.push('Take a break after losses before trading again');
-    } else if (recommendation.includes('cooldown period')) {
-      actions.push('Wait at least 2 hours after any loss before entering a new trade');
+    // Extract one clear, actionable sentence
+    if (recommendation.includes('cooldown period') || recommendation.includes('Wait')) {
+      return 'Wait 2 hours after any loss before your next trade';
     } else if (recommendation.includes('Stop trading')) {
-      actions.push('Stop trading after next risk violation');
+      return 'Stop trading after your next rule breach';
     } else if (recommendation.includes('reduce position size')) {
-      actions.push('Reduce position sizes to stay within risk limits');
+      return 'Keep position sizes within your limits today';
     } else if (recommendation.includes('review your exit reasons')) {
-      actions.push('Review exit reasons before closing trades early');
+      return 'Review your exit plan before closing any trade';
     } else if (recommendation.includes('write down your exit plan')) {
-      actions.push('Write down exit plan before each trade');
+      return 'Write down your exit plan before entering trades';
+    } else if (recommendation.includes('Take a break')) {
+      return 'Take a break before trading again';
     } else {
-      // Fallback: use first sentence of recommendation
+      // Fallback: use first sentence, shortened
       const firstSentence = recommendation.split('.')[0];
-      if (firstSentence && firstSentence.length < 100) {
-        actions.push(firstSentence);
+      if (firstSentence && firstSentence.length < 80) {
+        return firstSentence;
       }
     }
   }
-
-  // Limit to max 2 actions
-  return actions.slice(0, 2);
+  
+  return null;
 }
 
 export function TodaysFocusStrip({ prioritizedInsights }: TodaysFocusStripProps) {
-  const actions = extractActions(prioritizedInsights);
+  const action = extractPrimaryAction(prioritizedInsights);
 
-  if (actions.length === 0) {
+  if (!action) {
     return null;
   }
 
   return (
-    <Card className="border-primary/30 bg-primary/5 shadow-md">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <Target className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-          <div className="flex-1">
-            <h3 className="text-sm font-semibold text-foreground mb-2">Today's Focus</h3>
-            <ul className="space-y-1.5">
-              {actions.map((action, index) => (
-                <li key={index} className="text-sm text-foreground flex items-start gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  <span>{action}</span>
-                </li>
-              ))}
-            </ul>
+    <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6 shadow-sm mb-8">
+      <div className="flex items-center gap-4">
+        <div className="flex-shrink-0">
+          <div className="rounded-full bg-primary/10 p-3">
+            <Target className="w-6 h-6 text-primary" />
           </div>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex-1">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+            Today's Focus
+          </p>
+          <p className="text-lg font-semibold text-foreground leading-relaxed">
+            {action}
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
 

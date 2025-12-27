@@ -1,153 +1,148 @@
 /**
  * Behavioral Snapshot Card
  * 
- * Top-level behavioral summary that orients the user immediately
+ * Compact visual summary - 50% smaller, scores only
  */
 
 import { BehavioralSnapshot, DisciplineStatus, RiskStatus, PsychologyStatus } from '../types/insightV2.types';
-import { AlertCircle, CheckCircle2, TrendingUp, TrendingDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface BehavioralSnapshotCardProps {
   snapshot: BehavioralSnapshot;
 }
 
 export function BehavioralSnapshotCard({ snapshot }: BehavioralSnapshotCardProps) {
-  const getDisciplineIcon = () => {
+  const getStatusColor = (status: string) => {
+    if (status === 'GOOD' || status === 'CONTROLLED' || status === 'ALIGNED') {
+      return 'text-green-500';
+    } else if (status === 'NEEDS_ATTENTION' || status === 'NEAR_LIMITS' || status === 'MISMATCHED') {
+      return 'text-amber-500';
+    } else {
+      return 'text-red-500';
+    }
+  };
+
+  const getStatusBg = (status: string) => {
+    if (status === 'GOOD' || status === 'CONTROLLED' || status === 'ALIGNED') {
+      return 'bg-green-500/10';
+    } else if (status === 'NEEDS_ATTENTION' || status === 'NEAR_LIMITS' || status === 'MISMATCHED') {
+      return 'bg-amber-500/10';
+    } else {
+      return 'bg-red-500/10';
+    }
+  };
+
+  const getDisciplineScore = () => {
     switch (snapshot.discipline) {
       case DisciplineStatus.GOOD:
-        return <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />;
+        return { score: 90, label: 'Strong' };
       case DisciplineStatus.NEEDS_ATTENTION:
-        return <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
+        return { score: 60, label: 'Fair' };
       case DisciplineStatus.POOR:
-        return <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />;
+        return { score: 30, label: 'Poor' };
     }
   };
 
-  const getDisciplineLabel = () => {
-    switch (snapshot.discipline) {
-      case DisciplineStatus.GOOD:
-        return 'Good';
-      case DisciplineStatus.NEEDS_ATTENTION:
-        return 'Needs attention';
-      case DisciplineStatus.POOR:
-        return 'Poor';
-    }
-  };
-
-  const getRiskIcon = () => {
+  const getRiskScore = () => {
     switch (snapshot.risk) {
       case RiskStatus.CONTROLLED:
-        return <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />;
+        return { score: 85, label: 'Safe' };
       case RiskStatus.NEAR_LIMITS:
-        return <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
+        return { score: 55, label: 'High' };
       case RiskStatus.EXCESSIVE:
-        return <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />;
+        return { score: 25, label: 'Risky' };
     }
   };
 
-  const getRiskLabel = () => {
-    switch (snapshot.risk) {
-      case RiskStatus.CONTROLLED:
-        return 'Controlled';
-      case RiskStatus.NEAR_LIMITS:
-        return 'Near limits';
-      case RiskStatus.EXCESSIVE:
-        return 'Excessive';
-    }
-  };
-
-  const getPsychologyIcon = () => {
+  const getPsychologyScore = () => {
     switch (snapshot.psychology) {
       case PsychologyStatus.ALIGNED:
-        return <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />;
+        return { score: 80, label: 'Clear' };
       case PsychologyStatus.MISMATCHED:
-        return <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
+        return { score: 40, label: 'Mixed' };
     }
   };
 
-  const getPsychologyLabel = () => {
-    switch (snapshot.psychology) {
-      case PsychologyStatus.ALIGNED:
-        return 'Aligned';
-      case PsychologyStatus.MISMATCHED:
-        return 'Confidence mismatch';
-    }
-  };
-
-  const getPeriodLabel = () => {
-    switch (snapshot.period) {
-      case 'TODAY':
-        return 'Today';
-      case 'WEEK':
-        return 'This Week';
-      case 'MONTH':
-        return 'This Month';
-    }
-  };
+  const disciplineData = getDisciplineScore();
+  const riskData = getRiskScore();
+  const psychologyData = getPsychologyScore();
 
   return (
-    <div className="card-calm mb-8">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-foreground">
-          {getPeriodLabel()} — Behavioral Summary
-        </h2>
+    <div className="grid grid-cols-4 gap-3 mb-6">
+      {/* Discipline */}
+      <div className={cn(
+        'rounded-lg p-4 border border-border transition-all hover:shadow-sm',
+        getStatusBg(snapshot.discipline)
+      )}>
+        <p className="text-xs text-muted-foreground mb-2">Discipline</p>
+        <div className="flex items-baseline gap-1">
+          <p className={cn('text-2xl font-bold', getStatusColor(snapshot.discipline))}>
+            {disciplineData.score}
+          </p>
+          <p className="text-xs text-muted-foreground">%</p>
+        </div>
+        <p className="text-xs font-medium text-foreground mt-1">{disciplineData.label}</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Discipline */}
-        <div className="flex items-start gap-3">
-          {getDisciplineIcon()}
-          <div>
-            <p className="text-sm text-muted-foreground">Discipline</p>
-            <p className="text-base font-medium text-foreground">{getDisciplineLabel()}</p>
-          </div>
+      {/* Risk */}
+      <div className={cn(
+        'rounded-lg p-4 border border-border transition-all hover:shadow-sm',
+        getStatusBg(snapshot.risk)
+      )}>
+        <p className="text-xs text-muted-foreground mb-2">Risk</p>
+        <div className="flex items-baseline gap-1">
+          <p className={cn('text-2xl font-bold', getStatusColor(snapshot.risk))}>
+            {riskData.score}
+          </p>
+          <p className="text-xs text-muted-foreground">%</p>
         </div>
-
-        {/* Risk */}
-        <div className="flex items-start gap-3">
-          {getRiskIcon()}
-          <div>
-            <p className="text-sm text-muted-foreground">Risk</p>
-            <p className="text-base font-medium text-foreground">{getRiskLabel()}</p>
-          </div>
-        </div>
-
-        {/* Psychology */}
-        <div className="flex items-start gap-3">
-          {getPsychologyIcon()}
-          <div>
-            <p className="text-sm text-muted-foreground">Psychology</p>
-            <p className="text-base font-medium text-foreground">{getPsychologyLabel()}</p>
-          </div>
-        </div>
-
-        {/* Consistency */}
-        <div className="flex items-start gap-3">
-          {snapshot.consistencyScore >= 60 ? (
-            <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
-          ) : snapshot.consistencyScore === 0 && snapshot.evaluatedTrades < 8 ? (
-            <TrendingDown className="w-5 h-5 text-muted-foreground" />
-          ) : (
-            <TrendingDown className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-          )}
-          <div>
-            <p className="text-sm text-muted-foreground">Consistency</p>
-            {snapshot.consistencyScore === 0 && snapshot.evaluatedTrades < 8 ? (
-              <>
-                <p className="text-xs text-muted-foreground italic">Cannot be assessed yet</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Needs more trades</p>
-              </>
-            ) : (
-              <p className="text-base font-medium text-foreground">{snapshot.consistencyScore}%</p>
-            )}
-          </div>
-        </div>
+        <p className="text-xs font-medium text-foreground mt-1">{riskData.label}</p>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-border">
-        <p className="text-xs text-muted-foreground">
-          Based on {snapshot.evaluatedTrades} {snapshot.evaluatedTrades === 1 ? 'trade' : 'trades'}
-        </p>
+      {/* Psychology */}
+      <div className={cn(
+        'rounded-lg p-4 border border-border transition-all hover:shadow-sm',
+        getStatusBg(snapshot.psychology)
+      )}>
+        <p className="text-xs text-muted-foreground mb-2">Psychology</p>
+        <div className="flex items-baseline gap-1">
+          <p className={cn('text-2xl font-bold', getStatusColor(snapshot.psychology))}>
+            {psychologyData.score}
+          </p>
+          <p className="text-xs text-muted-foreground">%</p>
+        </div>
+        <p className="text-xs font-medium text-foreground mt-1">{psychologyData.label}</p>
+      </div>
+
+      {/* Consistency */}
+      <div className={cn(
+        'rounded-lg p-4 border border-border transition-all hover:shadow-sm',
+        snapshot.consistencyScore >= 60 ? 'bg-green-500/10' : 
+        snapshot.consistencyScore === 0 && snapshot.evaluatedTrades < 8 ? 'bg-muted/30' : 
+        'bg-amber-500/10'
+      )}>
+        <p className="text-xs text-muted-foreground mb-2">Consistency</p>
+        {snapshot.consistencyScore === 0 && snapshot.evaluatedTrades < 8 ? (
+          <>
+            <p className="text-2xl font-bold text-muted-foreground">--</p>
+            <p className="text-xs text-muted-foreground mt-1">Need more data</p>
+          </>
+        ) : (
+          <>
+            <div className="flex items-baseline gap-1">
+              <p className={cn(
+                'text-2xl font-bold',
+                snapshot.consistencyScore >= 60 ? 'text-green-500' : 'text-amber-500'
+              )}>
+                {snapshot.consistencyScore}
+              </p>
+              <p className="text-xs text-muted-foreground">%</p>
+            </div>
+            <p className="text-xs font-medium text-foreground mt-1">
+              {snapshot.consistencyScore >= 60 ? 'Stable' : 'Variable'}
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
