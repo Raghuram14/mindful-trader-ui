@@ -8,6 +8,7 @@ import {
   Shield,
   LogOut,
   User,
+  MessageSquare,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/auth/auth.context";
@@ -19,6 +20,7 @@ const navItems = [
   { title: "My Rules", path: "/rules", icon: Shield },
   { title: "Insights", path: "/insights-v2", icon: Sparkles },
   { title: "History", path: "/history", icon: History },
+  { title: "Suggestions", path: "/suggestions", icon: MessageSquare },
 ];
 
 export function AppSidebar() {

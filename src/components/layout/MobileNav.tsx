@@ -1,4 +1,4 @@
-import { Home, Plus, Sparkles, History } from 'lucide-react';
+import { Home, Plus, Sparkles, History, MessageSquare } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 
 const navItems = [
@@ -6,6 +6,7 @@ const navItems = [
   { title: 'Add', path: '/add-trade', icon: Plus },
   { title: 'Insights', path: '/insights-v2', icon: Sparkles },
   { title: 'History', path: '/history', icon: History },
+  { title: 'Feedback', path: '/suggestions', icon: MessageSquare },
 ];
 
 export function MobileNav() {

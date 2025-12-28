@@ -18,6 +18,7 @@ import InsightsV2Page from "./features/insights-v2/pages/InsightsV2Page";
 import HistoryPage from "./pages/HistoryPage";
 import TradingRulesPage from "./pages/TradingRulesPage";
 import TradeImportPage from "./features/trade-import/pages/TradeImportPage";
+import SuggestionsPage from "./pages/SuggestionsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,7 @@ function AppRoutes() {
       <Route path="/insights-v2" element={<ProtectedRoute><InsightsV2Page /></ProtectedRoute>} />
       <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
       <Route path="/import" element={<ProtectedRoute><TradeImportPage /></ProtectedRoute>} />
+      <Route path="/suggestions" element={<ProtectedRoute><SuggestionsPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
