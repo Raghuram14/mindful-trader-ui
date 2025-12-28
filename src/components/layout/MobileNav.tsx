@@ -1,12 +1,12 @@
-import { Home, Plus, Sparkles, History, MessageSquare } from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { Home, Plus, Sparkles, History, MessageSquare } from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
 
 const navItems = [
-  { title: 'Today', path: '/today', icon: Home },
-  { title: 'Add', path: '/add-trade', icon: Plus },
-  { title: 'Insights', path: '/insights-v2', icon: Sparkles },
-  { title: 'History', path: '/history', icon: History },
-  { title: 'Feedback', path: '/suggestions', icon: MessageSquare },
+  { title: "Today", path: "/today", icon: Home },
+  { title: "Add", path: "/add-trade", icon: Plus },
+  { title: "Insights", path: "/insights-v2", icon: Sparkles },
+  { title: "History", path: "/history", icon: History },
+  { title: "Feedback", path: "/suggestions", icon: MessageSquare },
 ];
 
 export function MobileNav() {
@@ -22,9 +22,7 @@ export function MobileNav() {
               <NavLink
                 to={item.path}
                 className={`flex flex-col items-center gap-1 px-4 py-2 text-xs font-medium transition-all duration-200 ${
-                  isActive
-                    ? 'text-primary'
-                    : 'text-sidebar-foreground'
+                  isActive ? "text-primary" : "text-sidebar-foreground"
                 }`}
               >
                 <item.icon className="w-5 h-5" />

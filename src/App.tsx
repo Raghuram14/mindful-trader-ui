@@ -25,7 +25,7 @@ const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -33,11 +33,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
   }
-  
+
   return <>{children}</>;
 }
 
@@ -49,18 +49,90 @@ function AppRoutes() {
       <Route path="/" element={<Index />} />
       <Route
         path="/auth"
-        element={isAuthenticated ? <Navigate to="/today" replace /> : <AuthPage />}
+        element={
+          isAuthenticated ? <Navigate to="/today" replace /> : <AuthPage />
+        }
       />
-      <Route path="/today" element={<ProtectedRoute><CoachingPage /></ProtectedRoute>} />
-      <Route path="/add-trade" element={<ProtectedRoute><AddTradePage /></ProtectedRoute>} />
-      <Route path="/rules" element={<ProtectedRoute><TradingRulesPage /></ProtectedRoute>} />
-      <Route path="/trade/:id" element={<ProtectedRoute><TradeDetailPage /></ProtectedRoute>} />
-      <Route path="/exit-trade/:id" element={<ProtectedRoute><ExitTradePage /></ProtectedRoute>} />
-      <Route path="/insights" element={<ProtectedRoute><InsightsPage /></ProtectedRoute>} />
-      <Route path="/insights-v2" element={<ProtectedRoute><InsightsV2Page /></ProtectedRoute>} />
-      <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
-      <Route path="/import" element={<ProtectedRoute><TradeImportPage /></ProtectedRoute>} />
-      <Route path="/suggestions" element={<ProtectedRoute><SuggestionsPage /></ProtectedRoute>} />
+      <Route
+        path="/today"
+        element={
+          <ProtectedRoute>
+            <CoachingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/add-trade"
+        element={
+          <ProtectedRoute>
+            <AddTradePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/rules"
+        element={
+          <ProtectedRoute>
+            <TradingRulesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/trade/:id"
+        element={
+          <ProtectedRoute>
+            <TradeDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/exit-trade/:id"
+        element={
+          <ProtectedRoute>
+            <ExitTradePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/insights"
+        element={
+          <ProtectedRoute>
+            <InsightsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/insights-v2"
+        element={
+          <ProtectedRoute>
+            <InsightsV2Page />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/history"
+        element={
+          <ProtectedRoute>
+            <HistoryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/import"
+        element={
+          <ProtectedRoute>
+            <TradeImportPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/suggestions"
+        element={
+          <ProtectedRoute>
+            <SuggestionsPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
