@@ -10,7 +10,7 @@ import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import TodayPage from "./pages/TodayPage";
 import CoachingPage from "./features/coaching/pages/CoachingPage";
-import AddTradePage from "./pages/AddTradePage";
+import AddTradePageNew from "./pages/AddTradePageNew";
 import TradeDetailPage from "./pages/TradeDetailPage";
 import ExitTradePage from "./pages/ExitTradePage";
 import InsightsPage from "./features/insights/pages/InsightsPage";
@@ -19,6 +19,8 @@ import HistoryPage from "./pages/HistoryPage";
 import TradingRulesPage from "./pages/TradingRulesPage";
 import TradeImportPage from "./features/trade-import/pages/TradeImportPage";
 import SuggestionsPage from "./pages/SuggestionsPage";
+import { BrokerSettingsPage } from "./pages/BrokerSettingsPage";
+import { BrokerCallbackPage } from "./pages/BrokerCallbackPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,7 +67,7 @@ function AppRoutes() {
         path="/add-trade"
         element={
           <ProtectedRoute>
-            <AddTradePage />
+            <AddTradePageNew />
           </ProtectedRoute>
         }
       />
@@ -133,6 +135,15 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/broker-settings"
+        element={
+          <ProtectedRoute>
+            <BrokerSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/broker/:broker/callback" element={<BrokerCallbackPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

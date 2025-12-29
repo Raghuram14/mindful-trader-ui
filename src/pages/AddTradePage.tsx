@@ -1,21 +1,28 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AppLayout } from '@/components/layout/AppLayout';
-import { useTrades } from '@/context/TradeContext';
-import { useRules } from '@/context/RulesContext';
-import { formatCurrency } from '@/lib/mockData';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DateTimePicker } from '@/components/ui/date-time-picker';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { BrokerOrderToggle } from "@/components/broker/BrokerOrderToggle";
+import { useTrades } from "@/context/TradeContext";
+import { useRules } from "@/context/RulesContext";
+import { formatCurrency } from "@/lib/mockData";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 import {
   calculateAccountRiskPercent,
   checkDailyRuleConflicts,
   calculateActualRisk,
   checkRiskMismatch,
-} from '@/utils/riskNudges';
+} from "@/utils/riskNudges";
 
 const riskPresets = [500, 1000, 2000];
 
@@ -29,19 +36,19 @@ export default function AddTradePage() {
   now.setSeconds(0, 0); // Reset seconds and milliseconds
 
   const [formData, setFormData] = useState({
-    instrumentType: 'STOCK' as 'STOCK' | 'FUTURES' | 'OPTIONS',
-    symbol: '',
-    optionType: 'CALL' as 'PUT' | 'CALL' | undefined,
+    instrumentType: "STOCK" as "STOCK" | "FUTURES" | "OPTIONS",
+    symbol: "",
+    optionType: "CALL" as "PUT" | "CALL" | undefined,
     tradeDateTime: now,
-    type: 'buy' as 'buy' | 'sell',
-    quantity: '',
-    entryPrice: '',
-    plannedStop: '',
-    plannedTarget: '',
+    type: "buy" as "buy" | "sell",
+    quantity: "",
+    entryPrice: "",
+    plannedStop: "",
+    plannedTarget: "",
     confidence: 3,
     riskComfort: 1000,
-    customRisk: '',
-    reason: '',
+    customRisk: "",
+    reason: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,13 +56,13 @@ export default function AddTradePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const riskAmount = formData.customRisk 
-      ? parseInt(formData.customRisk) 
+
+    const riskAmount = formData.customRisk
+      ? parseInt(formData.customRisk)
       : formData.riskComfort;
 
     // Format date and time from the DateTime object
-    const tradeDate = formData.tradeDateTime.toISOString().split('T')[0];
+    const tradeDate = formData.tradeDateTime.toISOString().split("T")[0];
     const tradeTime = formData.tradeDateTime.toTimeString().slice(0, 5);
 
     try {
@@ -63,48 +70,60 @@ export default function AddTradePage() {
       await addTrade({
         instrumentType: formData.instrumentType,
         symbol: formData.symbol.toUpperCase(),
-        optionType: formData.instrumentType === 'OPTIONS' ? formData.optionType : undefined,
+        optionType:
+          formData.instrumentType === "OPTIONS"
+            ? formData.optionType
+            : undefined,
         tradeDate,
         tradeTime,
         type: formData.type,
         quantity: parseInt(formData.quantity) || 0,
-        entryPrice: formData.entryPrice ? parseFloat(formData.entryPrice) : undefined,
-        plannedStop: formData.plannedStop ? parseFloat(formData.plannedStop) : undefined,
-        plannedTarget: formData.plannedTarget ? parseFloat(formData.plannedTarget) : undefined,
+        entryPrice: formData.entryPrice
+          ? parseFloat(formData.entryPrice)
+          : undefined,
+        plannedStop: formData.plannedStop
+          ? parseFloat(formData.plannedStop)
+          : undefined,
+        plannedTarget: formData.plannedTarget
+          ? parseFloat(formData.plannedTarget)
+          : undefined,
         confidence: formData.confidence,
         riskComfort: riskAmount,
         reason: formData.reason || undefined,
       });
 
       toast({
-        title: 'Trade committed',
-        description: 'Your trade plan has been successfully committed.',
+        title: "Trade committed",
+        description: "Your trade plan has been successfully committed.",
       });
 
-      navigate('/today');
+      navigate("/today");
     } catch (error) {
       toast({
-        title: 'Failed to commit trade',
-        description: error instanceof Error ? error.message : 'An error occurred while committing the trade.',
-        variant: 'destructive',
+        title: "Failed to commit trade",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while committing the trade.",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const isValid = 
-    formData.symbol.trim() && 
-    formData.quantity && 
+  const isValid =
+    formData.symbol.trim() &&
+    formData.quantity &&
     parseInt(formData.quantity) > 0 &&
     formData.entryPrice &&
     parseFloat(formData.entryPrice) > 0 &&
     formData.confidence >= 1 &&
-    (formData.instrumentType !== 'OPTIONS' || formData.optionType);
+    (formData.instrumentType !== "OPTIONS" || formData.optionType);
 
   // Calculate risk nudges (informational only)
-  const riskAmount = formData.customRisk 
-    ? parseInt(formData.customRisk) 
+  const riskAmount = formData.customRisk
+    ? parseInt(formData.customRisk)
     : formData.riskComfort;
 
   // Nudge 1: % of Account at Risk
@@ -118,8 +137,12 @@ export default function AddTradePage() {
   }, [riskAmount, dailyStatus, rules]);
 
   // Nudge 3: Risk vs Stop × Quantity Mismatch
-  const entryPrice = formData.entryPrice ? parseFloat(formData.entryPrice) : undefined;
-  const stopPrice = formData.plannedStop ? parseFloat(formData.plannedStop) : undefined;
+  const entryPrice = formData.entryPrice
+    ? parseFloat(formData.entryPrice)
+    : undefined;
+  const stopPrice = formData.plannedStop
+    ? parseFloat(formData.plannedStop)
+    : undefined;
   const quantity = formData.quantity ? parseInt(formData.quantity) : undefined;
 
   const actualRisk = useMemo(() => {
@@ -146,11 +169,12 @@ export default function AddTradePage() {
               <Label htmlFor="instrumentType">Instrument Type</Label>
               <Select
                 value={formData.instrumentType}
-                onValueChange={(value: 'STOCK' | 'FUTURES' | 'OPTIONS') => {
-                  setFormData(prev => ({ 
-                    ...prev, 
+                onValueChange={(value: "STOCK" | "FUTURES" | "OPTIONS") => {
+                  setFormData((prev) => ({
+                    ...prev,
                     instrumentType: value,
-                    optionType: value === 'OPTIONS' ? prev.optionType : undefined
+                    optionType:
+                      value === "OPTIONS" ? prev.optionType : undefined,
                   }));
                 }}
               >
@@ -172,7 +196,12 @@ export default function AddTradePage() {
                 id="symbol"
                 type="text"
                 value={formData.symbol}
-                onChange={(e) => setFormData(prev => ({ ...prev, symbol: e.target.value.toUpperCase() }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    symbol: e.target.value.toUpperCase(),
+                  }))
+                }
                 placeholder="e.g., RELIANCE"
                 className="mt-1.5 h-10 uppercase"
                 required
@@ -186,7 +215,9 @@ export default function AddTradePage() {
                 id="quantity"
                 type="number"
                 value={formData.quantity}
-                onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, quantity: e.target.value }))
+                }
                 placeholder="Shares / lots"
                 className="mt-1.5 h-10"
                 min="1"
@@ -204,7 +235,12 @@ export default function AddTradePage() {
                 type="number"
                 step="0.01"
                 value={formData.entryPrice}
-                onChange={(e) => setFormData(prev => ({ ...prev, entryPrice: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    entryPrice: e.target.value,
+                  }))
+                }
                 placeholder="Enter price"
                 className="mt-1.5 h-10"
                 min="0.01"
@@ -213,28 +249,44 @@ export default function AddTradePage() {
             </div>
             <div>
               <Label htmlFor="plannedStop">
-                Planned Stop Price <span className="text-muted-foreground font-normal text-xs">(optional)</span>
+                Planned Stop Price{" "}
+                <span className="text-muted-foreground font-normal text-xs">
+                  (optional)
+                </span>
               </Label>
               <Input
                 id="plannedStop"
                 type="number"
                 step="0.01"
                 value={formData.plannedStop}
-                onChange={(e) => setFormData(prev => ({ ...prev, plannedStop: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    plannedStop: e.target.value,
+                  }))
+                }
                 placeholder="Enter price"
                 className="mt-1.5 h-10"
               />
             </div>
             <div>
               <Label htmlFor="plannedTarget">
-                Planned Target Price <span className="text-muted-foreground font-normal text-xs">(optional)</span>
+                Planned Target Price{" "}
+                <span className="text-muted-foreground font-normal text-xs">
+                  (optional)
+                </span>
               </Label>
               <Input
                 id="plannedTarget"
                 type="number"
                 step="0.01"
                 value={formData.plannedTarget}
-                onChange={(e) => setFormData(prev => ({ ...prev, plannedTarget: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    plannedTarget: e.target.value,
+                  }))
+                }
                 placeholder="Enter price"
                 className="mt-1.5 h-10"
               />
@@ -242,19 +294,21 @@ export default function AddTradePage() {
           </div>
 
           {/* Option Type - Only show for OPTIONS */}
-          {formData.instrumentType === 'OPTIONS' && (
+          {formData.instrumentType === "OPTIONS" && (
             <div>
               <Label>Option Type</Label>
               <div className="flex gap-2 mt-1.5">
-                {(['PUT', 'CALL'] as const).map((optionType) => (
+                {(["PUT", "CALL"] as const).map((optionType) => (
                   <button
                     key={optionType}
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, optionType }))}
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, optionType }))
+                    }
                     className={`flex-1 py-2 px-4 rounded-lg font-medium text-sm transition-all duration-200 ${
                       formData.optionType === optionType
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                     }`}
                   >
                     {optionType}
@@ -268,17 +322,17 @@ export default function AddTradePage() {
           <div>
             <Label>Trade Direction</Label>
             <div className="flex gap-2 mt-1.5">
-              {(['buy', 'sell'] as const).map((type) => (
+              {(["buy", "sell"] as const).map((type) => (
                 <button
                   key={type}
                   type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, type }))}
+                  onClick={() => setFormData((prev) => ({ ...prev, type }))}
                   className={`flex-1 py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 ${
                     formData.type === type
-                      ? type === 'buy'
-                        ? 'bg-success text-success-foreground'
-                        : 'bg-destructive text-destructive-foreground'
-                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                      ? type === "buy"
+                        ? "bg-success text-success-foreground"
+                        : "bg-destructive text-destructive-foreground"
+                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                   }`}
                 >
                   {type.toUpperCase()}
@@ -290,7 +344,9 @@ export default function AddTradePage() {
           {/* 7. Trade Commitment Section */}
           <div className="pt-4 border-t border-border">
             <div className="mb-1">
-              <h3 className="text-sm font-medium text-foreground">Trade Commitment</h3>
+              <h3 className="text-sm font-medium text-foreground">
+                Trade Commitment
+              </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 These inputs help you stay disciplined during the trade.
               </p>
@@ -306,18 +362,22 @@ export default function AddTradePage() {
                     <button
                       key={level}
                       type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, confidence: level }))}
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, confidence: level }))
+                      }
                       className={`flex-1 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
                         formData.confidence === level
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                       }`}
                     >
                       {level}
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">1 = Low, 5 = High</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  1 = Low, 5 = High
+                </p>
               </div>
 
               {/* Risk Comfort */}
@@ -328,15 +388,17 @@ export default function AddTradePage() {
                     <button
                       key={amount}
                       type="button"
-                      onClick={() => setFormData(prev => ({ 
-                        ...prev, 
-                        riskComfort: amount, 
-                        customRisk: '' 
-                      }))}
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          riskComfort: amount,
+                          customRisk: "",
+                        }))
+                      }
                       className={`flex-1 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
                         formData.riskComfort === amount && !formData.customRisk
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                       }`}
                     >
                       {formatCurrency(amount)}
@@ -346,14 +408,20 @@ export default function AddTradePage() {
                 <Input
                   type="number"
                   value={formData.customRisk}
-                  onChange={(e) => setFormData(prev => ({ ...prev, customRisk: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      customRisk: e.target.value,
+                    }))
+                  }
                   placeholder="Custom amount"
                   className="h-10"
                 />
                 {/* Behavioral micro-nudge */}
                 {riskAmount > 0 ? (
                   <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                    Your maximum planned loss for this trade is {formatCurrency(riskAmount)}.
+                    Your maximum planned loss for this trade is{" "}
+                    {formatCurrency(riskAmount)}.
                     <br />
                     Commit to respecting this even during volatility.
                   </p>
@@ -362,10 +430,12 @@ export default function AddTradePage() {
                 {/* Nudge 1: % of Account at Risk */}
                 {accountRiskPercent !== null ? (
                   <p className="text-xs text-muted-foreground mt-2">
-                    This trade risks approximately {accountRiskPercent.toFixed(1)}% of your account.
+                    This trade risks approximately{" "}
+                    {accountRiskPercent.toFixed(1)}% of your account.
                   </p>
                 ) : (
-                  profile && (!profile.accountSize || profile.accountSize === 0) && (
+                  profile &&
+                  (!profile.accountSize || profile.accountSize === 0) && (
                     <p className="text-xs text-muted-foreground mt-2">
                       Set your account size to see % risk exposure.
                     </p>
@@ -375,10 +445,12 @@ export default function AddTradePage() {
                 {/* Nudge 3: Risk vs Stop × Quantity Mismatch */}
                 {hasRiskMismatch && actualRisk !== null ? (
                   <p className="text-xs text-amber-700 dark:text-amber-300 mt-2 leading-relaxed">
-                    Based on your stop and quantity, this trade risks more than your planned {formatCurrency(riskAmount)}.
+                    Based on your stop and quantity, this trade risks more than
+                    your planned {formatCurrency(riskAmount)}.
                     <br />
                     <span className="text-muted-foreground">
-                      You may want to adjust size or stop to stay aligned with your plan.
+                      You may want to adjust size or stop to stay aligned with
+                      your plan.
                     </span>
                   </p>
                 ) : null}
@@ -402,7 +474,7 @@ export default function AddTradePage() {
               value={formData.tradeDateTime}
               onChange={(date) => {
                 if (date) {
-                  setFormData(prev => ({ ...prev, tradeDateTime: date }));
+                  setFormData((prev) => ({ ...prev, tradeDateTime: date }));
                 }
               }}
               className="mt-1.5"
@@ -412,35 +484,78 @@ export default function AddTradePage() {
           {/* 11. Why this trade? */}
           <div>
             <Label htmlFor="reason">
-              Why this trade? <span className="text-muted-foreground font-normal text-xs">(optional)</span>
+              Why this trade?{" "}
+              <span className="text-muted-foreground font-normal text-xs">
+                (optional)
+              </span>
             </Label>
             <Input
               id="reason"
               type="text"
               value={formData.reason}
-              onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, reason: e.target.value }))
+              }
               placeholder="Brief reason for entry"
               className="mt-1.5 h-10"
             />
           </div>
 
-          {/* 12. Primary CTA */}
-          <div className="pt-2">
-            <button
-              type="submit"
-              disabled={!isValid || isSubmitting}
-              className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin inline" />
-                  Committing...
-                </>
-              ) : (
-                'Commit Trade Plan'
-              )}
-            </button>
+          {/* Broker Order Integration */}
+          <BrokerOrderToggle
+            tradeData={{
+              instrumentType: formData.instrumentType,
+              symbol: formData.symbol,
+              optionType: formData.optionType,
+              type: formData.type,
+              quantity: parseInt(formData.quantity) || 0,
+              entryPrice: parseFloat(formData.entryPrice) || 0,
+              plannedStop: parseFloat(formData.plannedStop) || 0,
+              plannedTarget: parseFloat(formData.plannedTarget) || 0,
+              confidence: formData.confidence,
+              riskAmount: formData.customRisk
+                ? parseInt(formData.customRisk)
+                : formData.riskComfort,
+              reason: formData.reason,
+            }}
+            onTradeCreated={(trade) => {
+              toast({
+                title: "Order Placed Successfully",
+                description:
+                  "Your trade has been placed through the broker and logged.",
+              });
+              navigate("/today");
+            }}
+            disabled={!isValid}
+          />
+
+          {/* Manual Entry Option */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or journal manually without broker
+              </span>
+            </div>
           </div>
+
+          {/* Manual Entry Button */}
+          <button
+            type="submit"
+            disabled={!isValid || isSubmitting}
+            className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin inline" />
+                Committing...
+              </>
+            ) : (
+              "Commit Trade Plan (Manual Entry)"
+            )}
+          </button>
         </form>
       </div>
     </AppLayout>

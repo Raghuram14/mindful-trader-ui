@@ -9,6 +9,7 @@ import {
   LogOut,
   User,
   MessageSquare,
+  Zap,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/auth/auth.context";
@@ -18,6 +19,7 @@ const navItems = [
   { title: "Today", path: "/today", icon: Home },
   { title: "Add Trade", path: "/add-trade", icon: Plus },
   { title: "My Rules", path: "/rules", icon: Shield },
+  { title: "Broker", path: "/broker-settings", icon: Zap },
   { title: "Insights", path: "/insights-v2", icon: Sparkles },
   { title: "History", path: "/history", icon: History },
   { title: "Suggestions", path: "/suggestions", icon: MessageSquare },
