@@ -9,9 +9,10 @@ export const insightsV2Api = {
   /**
    * Get insights V2 for a time range
    */
-  async getInsights(range: InsightRange): Promise<InsightsResponseV2> {
+  async getInsights(range: InsightRange, persist: boolean = true): Promise<InsightsResponseV2> {
     const rangeParam = range.toLowerCase();
-    return apiClient.get<InsightsResponseV2>(`/insights?range=${rangeParam}&version=v2`);
+    const persistParam = persist ? 'true' : 'false';
+    return apiClient.get<InsightsResponseV2>(`/insights?range=${rangeParam}&version=v2&persist=${persistParam}`);
   },
 };
 

@@ -1,34 +1,38 @@
 /**
  * Insights V2 Page
- * 
+ *
  * Enhanced insights page with behavioral snapshot, prioritization, and better semantics
  */
 
-import { useState } from 'react';
-import { AppLayout } from '@/components/layout/AppLayout';
-import { Loader2 } from 'lucide-react';
-import { useInsightsV2 } from '../hooks/useInsightsV2';
-import { useTrades } from '@/context/TradeContext';
-import { DataConfidenceBanner } from '@/features/trade-import/components/DataConfidenceBanner';
-import { BehavioralSnapshotCard } from '../components/BehavioralSnapshotCard';
-import { PrimaryInsightCard } from '../components/PrimaryInsightCard';
-import { InsightGroup } from '../components/InsightGroup';
-import { DataCoverageNote } from '../components/DataCoverageNote';
-import { TodaysFocusStrip } from '../components/TodaysFocusStrip';
-import { AdvancedMetricsCard } from '../components/AdvancedMetricsCard';
-import { InsightRange, InsightCategory } from '../types/insightV2.types';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useSearchParams } from 'react-router-dom';
+import { useState } from "react";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Loader2 } from "lucide-react";
+import { useInsightsV2 } from "../hooks/useInsightsV2";
+import { useTrades } from "@/context/TradeContext";
+import { DataConfidenceBanner } from "@/features/trade-import/components/DataConfidenceBanner";
+import { BehavioralSnapshotCard } from "../components/BehavioralSnapshotCard";
+import { PrimaryInsightCard } from "../components/PrimaryInsightCard";
+import { InsightGroup } from "../components/InsightGroup";
+import { DataCoverageNote } from "../components/DataCoverageNote";
+import { TodaysFocusStrip } from "../components/TodaysFocusStrip";
+import { AdvancedMetricsCard } from "../components/AdvancedMetricsCard";
+import { ExportInsightsButton } from "../components/ExportInsightsButton";
+import { InsightRange, InsightCategory } from "../types/insightV2.types";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSearchParams } from "react-router-dom";
 
 export default function InsightsV2Page() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialRange = (searchParams.get('range')?.toUpperCase() as InsightRange) || 'TODAY';
+  const initialRange =
+    (searchParams.get("range")?.toUpperCase() as InsightRange) || "TODAY";
   const [range, setRange] = useState<InsightRange>(initialRange);
   const { data: insightsResponse, loading, error } = useInsightsV2(range);
   const { trades } = useTrades();
 
   // Calculate imported trade counts for banner
-  const importedTradeCount = trades.filter(t => t.source === 'IMPORTED').length;
+  const importedTradeCount = trades.filter(
+    (t) => t.source === "IMPORTED"
+  ).length;
 
   const handleRangeChange = (newRange: InsightRange) => {
     setRange(newRange);
@@ -38,14 +42,22 @@ export default function InsightsV2Page() {
   return (
     <AppLayout>
       <div className="page-container animate-fade-in">
-        <header className="mb-8">
-          <h1 className="page-title">Insights</h1>
-          <p className="page-subtitle mt-1">Patterns from your trading behavior</p>
+        <header className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="page-title">Insights</h1>
+            <p className="page-subtitle mt-1">
+              Patterns from your trading behavior
+            </p>
+          </div>
+          <ExportInsightsButton />
         </header>
 
         {/* Tabs */}
         <div className="mb-8">
-          <Tabs value={range} onValueChange={(value) => handleRangeChange(value as InsightRange)}>
+          <Tabs
+            value={range}
+            onValueChange={(value) => handleRangeChange(value as InsightRange)}
+          >
             <TabsList className="grid w-full max-w-md grid-cols-3">
               <TabsTrigger value="TODAY">Today</TabsTrigger>
               <TabsTrigger value="WEEK">This Week</TabsTrigger>
@@ -61,13 +73,14 @@ export default function InsightsV2Page() {
               importedTradeCount={importedTradeCount}
               totalTradeCount={trades.length}
             />
-            {insightsResponse && insightsResponse.prioritizedInsights.length > 0 && (
-              <p className="text-xs text-muted-foreground mt-2 italic">
-                {importedTradeCount === trades.length
-                  ? 'Insights are based on executed trades. Plan-based patterns may be limited.'
-                  : 'Insights combine manual and imported trades.'}
-              </p>
-            )}
+            {insightsResponse &&
+              insightsResponse.prioritizedInsights.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-2 italic">
+                  {importedTradeCount === trades.length
+                    ? "Insights are based on executed trades. Plan-based patterns may be limited."
+                    : "Insights combine manual and imported trades."}
+                </p>
+              )}
           </div>
         )}
 
@@ -92,7 +105,9 @@ export default function InsightsV2Page() {
           <div className="space-y-6 max-w-5xl mx-auto">
             {/* HERO - Today's Focus Strip (at top) */}
             {insightsResponse.prioritizedInsights.length > 0 && (
-              <TodaysFocusStrip prioritizedInsights={insightsResponse.prioritizedInsights} />
+              <TodaysFocusStrip
+                prioritizedInsights={insightsResponse.prioritizedInsights}
+              />
             )}
 
             {/* Compact Behavioral Snapshot */}
@@ -116,26 +131,29 @@ export default function InsightsV2Page() {
             )}
 
             {/* Empty State */}
-            {insightsResponse.prioritizedInsights.length === 0 && 
-             Object.values(insightsResponse.groupedInsights).every(group => group.length === 0) && (
-              <div className="rounded-lg border border-border bg-muted/20 p-12 text-center">
-                <p className="text-sm text-muted-foreground">
-                  {insightsResponse.dataCoverage.sufficient
-                    ? 'No behavioral patterns detected at this time. Keep trading mindfully.'
-                    : 'Not enough data yet. Insights will appear as you record more trades.'}
-                </p>
-              </div>
-            )}
+            {insightsResponse.prioritizedInsights.length === 0 &&
+              Object.values(insightsResponse.groupedInsights).every(
+                (group) => group.length === 0
+              ) && (
+                <div className="rounded-lg border border-border bg-muted/20 p-12 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    {insightsResponse.dataCoverage.sufficient
+                      ? "No behavioral patterns detected at this time. Keep trading mindfully."
+                      : "Not enough data yet. Insights will appear as you record more trades."}
+                  </p>
+                </div>
+              )}
 
             {/* Secondary Grouped Insights (Collapsed) */}
-            {Object.entries(insightsResponse.groupedInsights).map(([category, insights]) => 
-              insights.length > 0 && (
-                <InsightGroup
-                  key={category}
-                  category={category as InsightCategory}
-                  insights={insights}
-                />
-              )
+            {Object.entries(insightsResponse.groupedInsights).map(
+              ([category, insights]) =>
+                insights.length > 0 && (
+                  <InsightGroup
+                    key={category}
+                    category={category as InsightCategory}
+                    insights={insights}
+                  />
+                )
             )}
           </div>
         )}
@@ -143,4 +161,3 @@ export default function InsightsV2Page() {
     </AppLayout>
   );
 }
-
