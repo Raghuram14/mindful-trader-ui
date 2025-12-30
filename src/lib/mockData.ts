@@ -323,3 +323,61 @@ export const mockDailyRuleStatus: DailyRuleStatus[] = [
     status: 'WARNING',
   },
 ];
+
+// Utility function to display confidence as dots
+export const getConfidenceDisplay = (confidence: number): string => {
+  return '●'.repeat(confidence) + '○'.repeat(5 - confidence);
+};
+
+// Format trade time relative to now
+export const formatTradeTime = (date: Date | string): string => {
+  const tradeDate = typeof date === 'string' ? new Date(date) : date;
+  const now = new Date();
+  const diffMs = now.getTime() - tradeDate.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+  return `${Math.floor(diffDays / 365)} years ago`;
+};
+
+// Analyze trade behavior and plan adherence
+export const analyzeTradeBehavior = (trade: Trade): {
+  followedPlan: boolean;
+  behavioralTag?: string;
+  insights?: string;
+} | null => {
+  if (trade.status !== 'closed' || !trade.exitPrice) return null;
+
+  const exitWithinTarget = trade.plannedTarget
+    ? Math.abs(trade.exitPrice - trade.plannedTarget) / trade.plannedTarget <= 0.02
+    : false;
+
+  const exitWithinStop = trade.plannedStop
+    ? Math.abs(trade.exitPrice - trade.plannedStop) / trade.plannedStop <= 0.02
+    : false;
+
+  const followedPlan = exitWithinTarget || exitWithinStop;
+
+  let behavioralTag: string | undefined;
+  let insights: string | undefined;
+
+  if (trade.exitReason === 'fear' && trade.result === 'win') {
+    behavioralTag = 'Premature Exit';
+    insights = 'You exited a winning trade early due to fear. The trade could have reached your target.';
+  } else if (trade.exitReason === 'impulse' && trade.result === 'loss') {
+    behavioralTag = 'Impulsive Exit';
+    insights = 'You exited impulsively, possibly cutting losses too early or chasing losses.';
+  } else if (!followedPlan && trade.result === 'loss') {
+    behavioralTag = 'Plan Deviation';
+    insights = 'You deviated from your plan and took a loss. Review your exit strategy.';
+  } else if (followedPlan && trade.result === 'win') {
+    behavioralTag = 'Disciplined Win';
+    insights = 'Great job! You followed your plan and achieved your target.';
+  }
+
+  return { followedPlan, behavioralTag, insights };
+};

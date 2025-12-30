@@ -80,6 +80,49 @@ export interface CompleteTradeRequest {
   reason?: string;
 }
 
+// History page types
+export interface GetClosedTradesQuery {
+  skip?: number;
+  limit?: number;
+  sortBy?: 'closedAt' | 'profitLoss' | 'symbol';
+  sortOrder?: 'asc' | 'desc';
+  dateFrom?: string;
+  dateTo?: string;
+  symbol?: string;
+  result?: 'win' | 'loss';
+  instrumentTypes?: string[];
+  exitReasons?: string[];
+  emotions?: string[];
+  sources?: string[];
+  minPnL?: number;
+  maxPnL?: number;
+}
+
+export interface PaginatedTradesResponse {
+  trades: TradeResponse[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
+
+export interface MonthTradesResponse {
+  trades: TradeResponse[];
+  monthTotal: number;
+  winCount: number;
+  lossCount: number;
+}
+
+export interface TradesMetadataResponse {
+  totalTrades: number;
+  firstTradeDate: string | null;
+  lastTradeDate: string | null;
+  availableMonths: Array<{
+    year: number;
+    month: number;
+  }>;
+}
+
 export const tradesApi = {
   getTrades: async (): Promise<TradeResponse[]> => {
     return apiClient.get<TradeResponse[]>('/trades');
@@ -116,5 +159,58 @@ export const tradesApi = {
   deleteTrade: async (id: string): Promise<void> => {
     return apiClient.delete<void>(`/trades/${id}`);
   },
-};
 
+  // History page methods
+  getClosedTradesPaginated: async (query: GetClosedTradesQuery): Promise<PaginatedTradesResponse> => {
+    const params = new URLSearchParams();
+    
+    if (query.skip !== undefined) params.append('skip', query.skip.toString());
+    if (query.limit !== undefined) params.append('limit', query.limit.toString());
+    if (query.sortBy) params.append('sortBy', query.sortBy);
+    if (query.sortOrder) params.append('sortOrder', query.sortOrder);
+    if (query.dateFrom) params.append('dateFrom', query.dateFrom);
+    if (query.dateTo) params.append('dateTo', query.dateTo);
+    if (query.symbol) params.append('symbol', query.symbol);
+    if (query.result) params.append('result', query.result);
+    if (query.instrumentTypes?.length) params.append('instrumentTypes', query.instrumentTypes.join(','));
+    if (query.exitReasons?.length) params.append('exitReasons', query.exitReasons.join(','));
+    if (query.emotions?.length) params.append('emotions', query.emotions.join(','));
+    if (query.sources?.length) params.append('sources', query.sources.join(','));
+    if (query.minPnL !== undefined) params.append('minPnL', query.minPnL.toString());
+    if (query.maxPnL !== undefined) params.append('maxPnL', query.maxPnL.toString());
+
+    return apiClient.get<PaginatedTradesResponse>(`/trades/closed-paginated?${params.toString()}`);
+  },
+
+  getMonthTrades: async (year: number, month: number): Promise<MonthTradesResponse> => {
+    return apiClient.get<MonthTradesResponse>(`/trades/calendar-month?year=${year}&month=${month}`);
+  },
+
+  getTradesMetadata: async (): Promise<TradesMetadataResponse> => {
+    return apiClient.get<TradesMetadataResponse>('/trades/metadata');
+  },
+
+  exportAllTrades: async (query: Omit<GetClosedTradesQuery, 'skip' | 'limit'>): Promise<TradeResponse[]> => {
+    const params = new URLSearchParams();
+    
+    if (query.sortBy) params.append('sortBy', query.sortBy);
+    if (query.sortOrder) params.append('sortOrder', query.sortOrder);
+    if (query.dateFrom) params.append('dateFrom', query.dateFrom);
+    if (query.dateTo) params.append('dateTo', query.dateTo);
+    if (query.symbol) params.append('symbol', query.symbol);
+    if (query.result) params.append('result', query.result);
+    if (query.instrumentTypes?.length) params.append('instrumentTypes', query.instrumentTypes.join(','));
+    if (query.exitReasons?.length) params.append('exitReasons', query.exitReasons.join(','));
+    if (query.emotions?.length) params.append('emotions', query.emotions.join(','));
+    if (query.sources?.length) params.append('sources', query.sources.join(','));
+    if (query.minPnL !== undefined) params.append('minPnL', query.minPnL.toString());
+    if (query.maxPnL !== undefined) params.append('maxPnL', query.maxPnL.toString());
+    
+    // Request all trades by setting very high limit
+    params.append('limit', '999999');
+    params.append('skip', '0');
+
+    const result = await apiClient.get<PaginatedTradesResponse>(`/trades/closed-paginated?${params.toString()}`);
+    return result.trades;
+  },
+};

@@ -1,276 +1,616 @@
-import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { AppLayout } from '@/components/layout/AppLayout';
-import { useTrades } from '@/context/TradeContext';
-import { formatCurrency, Trade } from '@/lib/mockData';
-import { Filter, Upload, Info } from 'lucide-react';
-import { DataConfidenceBanner } from '@/features/trade-import/components/DataConfidenceBanner';
-import { Button } from '@/components/ui/button';
+import { useState, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  getBehavioralTag,
-  isWithinPlan,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Filter as FilterIcon,
+  Download,
+  Keyboard,
+  List,
+  Calendar as CalendarIcon,
+  ArrowUpDown,
+  Upload,
+} from "lucide-react";
+import { tradesApi } from "@/api/trades";
+import { useHistoryFilters } from "@/hooks/useHistoryFilters";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { KeyboardShortcutsDialog } from "@/components/trade/KeyboardShortcutsDialog";
+import { HistoryFilterSheet } from "@/components/trade/HistoryFilterSheet";
+import { TradeGridView } from "@/components/trade/TradeGridView";
+import { TradeCalendarView } from "@/components/trade/TradeCalendarView";
+import { TradeDetailModal } from "@/components/trade/TradeDetailModal";
+import {
+  NoClosedTrades,
+  NoFilterResults,
+  ErrorState,
+} from "@/components/trade/EmptyStates";
+import { exportTradesToCSV } from "@/utils/export";
+import { useToast } from "@/hooks/use-toast";
+import {
+  formatCurrency,
+  getConfidenceDisplay,
+  analyzeTradeBehavior,
   formatTradeTime,
-  getConfidenceDots,
-  getInsightHint,
-} from '@/utils/tradeBehavior';
+} from "@/lib/mockData";
+import { format } from "date-fns";
 
-const exitReasonLabels: Record<NonNullable<Trade['exitReason']>, string> = {
-  target: 'Target',
-  stop: 'Stop',
-  fear: 'Fear',
-  unsure: 'Unsure',
-  impulse: 'Impulse',
-};
+// Hook to detect mobile
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(false);
+
+  useState(() => {
+    const mediaQuery = window.matchMedia(query);
+    setMatches(mediaQuery.matches);
+
+    const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  });
+
+  return matches;
+}
 
 export default function HistoryPage() {
-  const { getClosedTrades, trades } = useTrades();
-  const closedTrades = getClosedTrades();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const { toast } = useToast();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const [filterReason, setFilterReason] = useState<Trade['exitReason'] | 'all'>('all');
-  const [filterConfidence, setFilterConfidence] = useState<number | 'all'>('all');
-  const [showFilters, setShowFilters] = useState(false);
+  // Filter management
+  const {
+    filters,
+    rawFilters,
+    validationErrors,
+    updateFilters,
+    clearFilters,
+    updatePage,
+    setView,
+    activeFilterCount,
+    hasFilters,
+  } = useHistoryFilters();
 
-  // Calculate imported trade counts for banner
-  const importedTradeCount = useMemo(() => {
-    return closedTrades.filter(t => t.source === 'IMPORTED').length;
-  }, [closedTrades]);
+  // UI state
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [selectedTradeId, setSelectedTradeId] = useState<string | null>(null);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
-  const filteredTrades = closedTrades.filter(trade => {
-    if (filterReason !== 'all' && trade.exitReason !== filterReason) return false;
-    if (filterConfidence !== 'all' && trade.confidence !== filterConfidence) return false;
-    return true;
+  // Fetch paginated trades
+  const {
+    data: paginatedData,
+    isLoading: isLoadingTrades,
+    isError: isTradesError,
+    refetch: refetchTrades,
+  } = useQuery({
+    queryKey: ["closedTradesPaginated", filters],
+    queryFn: () => {
+      const query = {
+        skip: (filters.page - 1) * filters.limit,
+        limit: filters.limit,
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
+        dateFrom: filters.dateFrom?.toISOString().split("T")[0],
+        dateTo: filters.dateTo?.toISOString().split("T")[0],
+        symbol: filters.symbol,
+        result: filters.result === "all" ? undefined : filters.result,
+        instrumentTypes:
+          filters.instrumentTypes.length > 0
+            ? filters.instrumentTypes
+            : undefined,
+        exitReasons:
+          filters.exitReasons.length > 0 ? filters.exitReasons : undefined,
+        emotions: filters.emotions.length > 0 ? filters.emotions : undefined,
+        sources: filters.sources.length > 0 ? filters.sources : undefined,
+        minPnL: filters.minPnL,
+        maxPnL: filters.maxPnL,
+      };
+      return tradesApi.getClosedTradesPaginated(query);
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
+
+  // Fetch month trades for calendar view
+  const currentMonth = new Date();
+  const { data: monthData, isLoading: isLoadingMonth } = useQuery({
+    queryKey: [
+      "monthTrades",
+      currentMonth.getFullYear(),
+      currentMonth.getMonth() + 1,
+    ],
+    queryFn: () =>
+      tradesApi.getMonthTrades(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth() + 1
+      ),
+    enabled: filters.view === "calendar",
+    staleTime: 10 * 60 * 1000,
+  });
+
+  // Fetch metadata for calendar navigation
+  const { data: metadata } = useQuery({
+    queryKey: ["tradesMetadata"],
+    queryFn: () => tradesApi.getTradesMetadata(),
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onOpenFilters: () => setFiltersOpen(true),
+    onToggleView: (view) => setView(view),
+    onNavigatePage: (direction) => {
+      if (direction === "prev" && filters.page > 1) {
+        updatePage(filters.page - 1);
+      } else if (direction === "next" && paginatedData?.hasMore) {
+        updatePage(filters.page + 1);
+      }
+    },
+    onFocusSearch: () => searchInputRef.current?.focus(),
+    onOpenHelp: () => setShortcutsOpen(true),
+    enabled: !filtersOpen && !selectedTradeId,
+  });
+
+  // Handle export with confirmation
+  const handleExport = async () => {
+    if (!paginatedData) return;
+
+    if (paginatedData.total > 1000) {
+      setExportDialogOpen(true);
+    } else {
+      await exportTradesToCSV(filters, paginatedData.total, toast);
+    }
+  };
+
+  const confirmExport = async () => {
+    setExportDialogOpen(false);
+    if (paginatedData) {
+      await exportTradesToCSV(filters, paginatedData.total, toast);
+    }
+  };
+
+  // Handle month change for calendar
+  const handleMonthChange = (year: number, month: number) => {
+    // This would need calendar month state management
+    // For now, just a placeholder
+    console.log("Navigate to:", year, month);
+  };
+
+  // Build active filters for empty state
+  const activeFilters = [];
+  if (filters.dateFrom)
+    activeFilters.push({
+      label: `From: ${format(filters.dateFrom, "MMM dd, yyyy")}`,
+      onRemove: () => updateFilters({ dateFrom: undefined }),
+    });
+  if (filters.dateTo)
+    activeFilters.push({
+      label: `To: ${format(filters.dateTo, "MMM dd, yyyy")}`,
+      onRemove: () => updateFilters({ dateTo: undefined }),
+    });
+  if (filters.symbol)
+    activeFilters.push({
+      label: `Symbol: ${filters.symbol}`,
+      onRemove: () => updateFilters({ symbol: undefined }),
+    });
+  if (filters.result && filters.result !== "all")
+    activeFilters.push({
+      label: `Result: ${filters.result}`,
+      onRemove: () => updateFilters({ result: "all" }),
+    });
+
+  // Show empty states
+  if (isTradesError) {
+    return (
+      <AppLayout>
+        <div className="page-container">
+          <ErrorState onRetry={refetchTrades} />
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (
+    !isLoadingTrades &&
+    paginatedData &&
+    paginatedData.total === 0 &&
+    !hasFilters
+  ) {
+    return (
+      <AppLayout>
+        <div className="page-container">
+          <NoClosedTrades />
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
       <div className="page-container animate-fade-in">
+        {/* Header */}
         <header className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="page-title">Trade History</h1>
-              <p className="page-subtitle mt-1">Review your past trades</p>
+              <h1 className="page-title">Trading History</h1>
+              <p className="page-subtitle mt-1">
+                {paginatedData && `${paginatedData.total} closed trades`}
+              </p>
             </div>
-            <div className="flex items-center gap-3">
-              <Link to="/import">
+          </div>
+
+          {/* Action Bar */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* View Tabs */}
+            <Tabs value={filters.view} onValueChange={(v: any) => setView(v)}>
+              <TabsList>
+                <TabsTrigger value="list" className="gap-2">
+                  <List className="w-4 h-4" />
+                  List
+                </TabsTrigger>
+                <TabsTrigger value="calendar" className="gap-2">
+                  <CalendarIcon className="w-4 h-4" />
+                  Calendar
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <div className="flex-1" />
+
+            {/* Import Button */}
+            <Link to="/import">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Upload className="w-4 h-4" />
+                Import
+              </Button>
+            </Link>
+
+            {/* Filter Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFiltersOpen(true)}
+              className="gap-2"
+            >
+              <FilterIcon className="w-4 h-4" />
+              Filters
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary" className="ml-1">
+                  {activeFilterCount}
+                </Badge>
+              )}
+            </Button>
+
+            {/* Sort Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
-                  <Upload className="w-4 h-4" />
-                  Import trades
+                  <ArrowUpDown className="w-4 h-4" />
+                  Sort
                 </Button>
-              </Link>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`p-2 rounded-lg transition-colors ${
-                  showFilters ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                }`}
-              >
-                <Filter className="w-5 h-5" />
-              </button>
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() =>
+                    updateFilters({ sortBy: "closedAt", sortOrder: "desc" })
+                  }
+                >
+                  Date (Newest)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    updateFilters({ sortBy: "closedAt", sortOrder: "asc" })
+                  }
+                >
+                  Date (Oldest)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    updateFilters({ sortBy: "profitLoss", sortOrder: "desc" })
+                  }
+                >
+                  P&L (High to Low)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    updateFilters({ sortBy: "profitLoss", sortOrder: "asc" })
+                  }
+                >
+                  P&L (Low to High)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    updateFilters({ sortBy: "symbol", sortOrder: "asc" })
+                  }
+                >
+                  Symbol (A-Z)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    updateFilters({ sortBy: "symbol", sortOrder: "desc" })
+                  }
+                >
+                  Symbol (Z-A)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Export Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              className="gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export
+            </Button>
+
+            {/* Shortcuts Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShortcutsOpen(true)}
+              className="gap-2"
+            >
+              <Keyboard className="w-4 h-4" />
+            </Button>
           </div>
         </header>
 
-        {/* Data Confidence Banner */}
-        {importedTradeCount > 0 && (
-          <DataConfidenceBanner
-            importedTradeCount={importedTradeCount}
-            totalTradeCount={closedTrades.length}
+        {/* Content */}
+        {filters.view === "list" && (
+          <>
+            {isLoadingTrades ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-32 w-full" />
+                ))}
+              </div>
+            ) : paginatedData && paginatedData.trades.length > 0 ? (
+              <>
+                <div className="space-y-3 mb-6">
+                  {paginatedData.trades.map((trade) => {
+                    const behavior = analyzeTradeBehavior(trade as any);
+                    return (
+                      <button
+                        key={trade.id}
+                        onClick={() => setSelectedTradeId(trade.id)}
+                        className="w-full text-left card-calm hover:shadow-lg hover:scale-[1.01] transition-all duration-200 cursor-pointer focus:ring-2 focus:ring-primary"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-base font-semibold">
+                              {trade.symbol}
+                            </span>
+                            <Badge variant="secondary">
+                              {trade.instrumentType}
+                            </Badge>
+                            {trade.optionType && (
+                              <Badge variant="outline">
+                                {trade.optionType}
+                              </Badge>
+                            )}
+                          </div>
+                          <div
+                            className={`text-right px-4 py-2.5 rounded-lg min-w-[140px] ${
+                              trade.result === "win"
+                                ? "bg-green-500/10 text-green-700 dark:text-green-400"
+                                : "bg-red-500/10 text-red-700 dark:text-red-400"
+                            }`}
+                          >
+                            <div className="text-lg font-bold">
+                              {formatCurrency(trade.profitLoss || 0)}
+                            </div>
+                            <div className="text-xs opacity-80">
+                              {trade.profitLoss && trade.entryPrice
+                                ? `${(
+                                    (trade.profitLoss /
+                                      (trade.entryPrice * trade.quantity)) *
+                                    100
+                                  ).toFixed(2)}%`
+                                : "—"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 flex-wrap text-sm text-muted-foreground">
+                          <span>Qty: {trade.quantity}</span>
+                          <span>Entry: {formatCurrency(trade.entryPrice)}</span>
+                          <span>
+                            Exit:{" "}
+                            {trade.exitPrice
+                              ? formatCurrency(trade.exitPrice)
+                              : "—"}
+                          </span>
+                          <span>{getConfidenceDisplay(trade.confidence)}</span>
+                          {trade.closedAt && (
+                            <span>{formatTradeTime(trade.closedAt)}</span>
+                          )}
+                        </div>
+
+                        {behavior && (
+                          <div className="mt-3 flex items-center gap-2 flex-wrap">
+                            <Badge
+                              variant={
+                                behavior.followedPlan ? "default" : "outline"
+                              }
+                            >
+                              {behavior.followedPlan
+                                ? "Within Plan"
+                                : "Deviated"}
+                            </Badge>
+                            {behavior.behavioralTag && (
+                              <Badge variant="outline">
+                                {behavior.behavioralTag}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Pagination */}
+                <div className="mt-6 space-y-4">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Showing {(filters.page - 1) * filters.limit + 1}-
+                      {Math.min(
+                        filters.page * filters.limit,
+                        paginatedData.total
+                      )}{" "}
+                      of {paginatedData.total} trades
+                    </p>
+                  </div>
+                  <div className="flex justify-center">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() =>
+                              filters.page > 1 && updatePage(filters.page - 1)
+                            }
+                            className={
+                              filters.page === 1
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
+                          />
+                        </PaginationItem>
+                        {Array.from(
+                          {
+                            length: Math.min(
+                              5,
+                              Math.ceil(paginatedData.total / filters.limit)
+                            ),
+                          },
+                          (_, i) => filters.page - 2 + i
+                        )
+                          .filter(
+                            (p) =>
+                              p > 0 &&
+                              p <=
+                                Math.ceil(paginatedData.total / filters.limit)
+                          )
+                          .map((page) => (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                onClick={() => updatePage(page)}
+                                isActive={page === filters.page}
+                                className="cursor-pointer"
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          ))}
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() =>
+                              paginatedData.hasMore &&
+                              updatePage(filters.page + 1)
+                            }
+                            className={
+                              !paginatedData.hasMore
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <NoFilterResults
+                activeFilters={activeFilters}
+                onClearAll={clearFilters}
+              />
+            )}
+          </>
+        )}
+
+        {filters.view === "calendar" && (
+          <TradeCalendarView
+            monthData={monthData}
+            metadata={metadata}
+            isLoading={isLoadingMonth}
+            currentMonth={currentMonth}
+            onMonthChange={handleMonthChange}
+            onSelectTrade={setSelectedTradeId}
+            isMobile={isMobile}
           />
         )}
 
-        {/* Filters */}
-        {showFilters && (
-          <div className="card-calm mb-6 animate-fade-in">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Exit Reason
-                </label>
-                <select
-                  value={filterReason || 'all'}
-                  onChange={(e) => setFilterReason(e.target.value as Trade['exitReason'] | 'all')}
-                  className="input-calm w-full"
-                >
-                  <option value="all">All</option>
-                  {Object.entries(exitReasonLabels).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Confidence
-                </label>
-                <select
-                  value={filterConfidence}
-                  onChange={(e) => setFilterConfidence(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
-                  className="input-calm w-full"
-                >
-                  <option value="all">All</option>
-                  {[1, 2, 3, 4, 5].map((level) => (
-                    <option key={level} value={level}>{level}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Dialogs */}
+        <HistoryFilterSheet
+          open={filtersOpen}
+          onOpenChange={setFiltersOpen}
+          filters={rawFilters}
+          onFiltersChange={updateFilters}
+          onClearAll={clearFilters}
+          activeFilterCount={activeFilterCount}
+          validationErrors={validationErrors}
+          isMobile={isMobile}
+        />
 
-        {/* Trade List */}
-        {filteredTrades.length === 0 ? (
-          <div className="card-calm text-center py-12">
-            <p className="text-muted-foreground mb-4">No closed trades yet</p>
-            <Link to="/import">
-              <Button variant="outline" className="gap-2">
-                <Upload className="w-4 h-4" />
-                Import trades from broker
-              </Button>
-            </Link>
-            <p className="text-xs text-muted-foreground mt-2">
-              Supports Equity & Futures/Options CSVs
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredTrades.map((trade) => {
-              const behavioralTag = getBehavioralTag(trade);
-              const withinPlan = isWithinPlan(trade);
-              const timeContext = formatTradeTime(trade);
-              const confidenceDots = getConfidenceDots(trade.confidence);
-              const insightHint = getInsightHint(trade, trades);
+        <KeyboardShortcutsDialog
+          open={shortcutsOpen}
+          onOpenChange={setShortcutsOpen}
+        />
 
-              return (
-                <div
-                  key={trade.id}
-                  className="card-calm"
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    {/* Left side - Trade info */}
-                    <div className="flex-1">
-                      {/* Header row with symbol, badges, and time */}
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <span className="font-semibold text-lg text-foreground">{trade.symbol}</span>
-                        <span className="text-xs px-2 py-0.5 rounded font-medium bg-secondary text-secondary-foreground">
-                          {trade.instrumentType}
-                        </span>
-                        {trade.instrumentType === 'OPTIONS' && trade.optionType && (
-                          <span className="text-xs px-2 py-0.5 rounded font-medium bg-accent text-accent-foreground">
-                            {trade.optionType}
-                          </span>
-                        )}
-                        {trade.source === 'IMPORTED' && (
-                          <span className="text-xs px-2 py-0.5 rounded font-medium bg-muted text-muted-foreground">
-                            Imported
-                          </span>
-                        )}
-                        {trade.dataCompleteness?.hasDeclaredIntent === false && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="cursor-help inline-flex items-center">
-                                  <Info className="w-3 h-3 text-muted-foreground" />
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="text-xs">Planned stop/target not available for this trade</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                        {trade.exitReason && (
-                          <span className="text-xs px-2 py-0.5 rounded font-medium bg-secondary text-secondary-foreground">
-                            {exitReasonLabels[trade.exitReason]}
-                          </span>
-                        )}
-                        {timeContext && (
-                          <span className="text-xs text-muted-foreground ml-auto">
-                            {timeContext}
-                          </span>
-                        )}
-                      </div>
+        <TradeDetailModal
+          tradeId={selectedTradeId}
+          open={!!selectedTradeId}
+          onOpenChange={(open) => !open && setSelectedTradeId(null)}
+        />
 
-                      {/* Trade details - Single row */}
-                      <div className="flex items-center gap-4 text-sm flex-wrap mb-2">
-                        <span className="text-foreground">
-                          <span className="text-muted-foreground">Qty:</span> <span className="font-medium">{trade.quantity}</span>
-                        </span>
-                        <span className="text-foreground">
-                          <span className="text-muted-foreground">Entry:</span> <span className="font-medium">{formatCurrency(trade.entryPrice)}</span>
-                        </span>
-                        {trade.exitPrice && (
-                          <span className="text-foreground">
-                            <span className="text-muted-foreground">Exit:</span> <span className="font-medium">{formatCurrency(trade.exitPrice)}</span>
-                          </span>
-                        )}
-                        <span className="text-foreground flex items-center gap-1">
-                          <span className="text-muted-foreground">Conf:</span>
-                          <span className="font-medium text-xs tracking-wider" title={`${trade.confidence}/5`}>
-                            {confidenceDots}
-                          </span>
-                        </span>
-                      </div>
-
-                      {/* Behavioral insights row */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {/* Plan vs Outcome */}
-                        {trade.status === 'closed' && (
-                          <span className="text-xs px-2 py-0.5 rounded font-medium bg-secondary/50 text-muted-foreground">
-                            {withinPlan ? 'Within Plan' : 'Deviated from Plan'}
-                          </span>
-                        )}
-
-                        {/* Behavioral Tag */}
-                        {behavioralTag && (
-                          <span className="text-xs px-2 py-0.5 rounded font-medium bg-secondary/50 text-muted-foreground">
-                            {behavioralTag}
-                          </span>
-                        )}
-
-                        {/* Insight Hint */}
-                        {insightHint && (
-                          <span className="text-xs text-muted-foreground italic">
-                            {insightHint}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Right side - P&L display - Compact box */}
-                    {trade.profitLoss !== undefined && (
-                      <div className={`flex flex-col items-center justify-center px-4 py-3 rounded-lg border-2 min-w-[120px] ${
-                        trade.profitLoss > 0
-                          ? 'border-green-500/30 bg-green-500/5'
-                          : trade.profitLoss < 0
-                          ? 'border-red-500/30 bg-red-500/5'
-                          : 'border-border bg-secondary'
-                      }`}>
-                        <div className={`text-xl font-bold mb-1 ${
-                          trade.profitLoss > 0
-                            ? 'text-green-600 dark:text-green-400'
-                            : trade.profitLoss < 0
-                            ? 'text-red-600 dark:text-red-400'
-                            : 'text-foreground'
-                        }`}>
-                          {trade.profitLoss > 0 ? '+' : ''}{formatCurrency(trade.profitLoss)}
-                        </div>
-                        {trade.profitLoss !== 0 && trade.entryPrice && trade.quantity && (
-                          <div className="text-xs text-muted-foreground">
-                            {((Math.abs(trade.profitLoss) / (trade.entryPrice * trade.quantity)) * 100).toFixed(2)}%
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <AlertDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Export {paginatedData?.total} trades?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                You're about to export {paginatedData?.total.toLocaleString()}{" "}
+                trades. This may take a moment. Continue?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmExport}>
+                Export
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppLayout>
   );
