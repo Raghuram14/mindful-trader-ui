@@ -49,6 +49,7 @@ interface TradeFormData {
 
   // Execution
   selectedBroker: string | null;
+  orderType: "MARKET" | "LIMIT";
 
   // Metadata
   selectedInstrument?: InstrumentSearchResult;
@@ -87,6 +88,7 @@ export function TradeWizard({
     reason: "",
     tradeDateTime: now,
     selectedBroker: null,
+    orderType: "MARKET",
     ...initialData,
   });
 
@@ -602,13 +604,85 @@ export function TradeWizard({
                   Choose how you want to execute this trade
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-6">
                 <BrokerSelector
                   selectedBroker={formData.selectedBroker}
                   onBrokerSelect={(broker) =>
                     setFormData({ ...formData, selectedBroker: broker })
                   }
                 />
+
+                {/* Order Type Selection */}
+                {formData.selectedBroker && (
+                  <div className="space-y-3 pt-4 border-t">
+                    <Label>Order Type</Label>
+                    <div className="space-y-2">
+                      <label className="flex items-start space-x-3 p-3 border-2 rounded-lg cursor-pointer hover:border-primary transition-colors">
+                        <input
+                          type="radio"
+                          name="orderType"
+                          value="MARKET"
+                          checked={formData.orderType === "MARKET"}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              orderType: e.target.value as "MARKET" | "LIMIT",
+                            })
+                          }
+                          className="mt-1"
+                        />
+                        <div>
+                          <p className="font-medium">Market Order</p>
+                          <p className="text-sm text-muted-foreground">
+                            Executes immediately at the best available price
+                          </p>
+                        </div>
+                      </label>
+
+                      <label className="flex items-start space-x-3 p-3 border-2 rounded-lg cursor-pointer hover:border-primary transition-colors">
+                        <input
+                          type="radio"
+                          name="orderType"
+                          value="LIMIT"
+                          checked={formData.orderType === "LIMIT"}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              orderType: e.target.value as "MARKET" | "LIMIT",
+                            })
+                          }
+                          className="mt-1"
+                        />
+                        <div>
+                          <p className="font-medium">Limit Order</p>
+                          <p className="text-sm text-muted-foreground">
+                            Executes only at the specified entry price or better
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {formData.orderType === "MARKET" && (
+                      <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg text-sm text-blue-900 dark:text-blue-100">
+                        <p>
+                          <strong>Note:</strong> Market orders execute
+                          immediately but may have price slippage during
+                          volatile conditions.
+                        </p>
+                      </div>
+                    )}
+
+                    {formData.orderType === "LIMIT" && (
+                      <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg text-sm text-blue-900 dark:text-blue-100">
+                        <p>
+                          <strong>Note:</strong> Limit orders guarantee price
+                          but may not execute if market doesn't reach your entry
+                          price.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

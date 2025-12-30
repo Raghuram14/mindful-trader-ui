@@ -21,8 +21,8 @@ export interface Trade {
   result?: 'win' | 'loss';
   createdAt: Date;
   closedAt?: Date;
-  emotions?: ('fear' | 'neutral' | 'confident')[];
-  source?: 'MANUAL' | 'IMPORTED';
+  emotions?: ('fear' | 'neutral' | 'confident' | 'greed' | 'fomo' | 'regret' | 'calm')[];
+  source?: 'MANUAL' | 'MANUAL_BROKER' | 'BROKER_EXTERNAL' | 'IMPORTED';
   dataCompleteness?: {
     hasPlannedRisk: boolean;
     hasDeclaredIntent: boolean;

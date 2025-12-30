@@ -73,6 +73,13 @@ export interface CloseTradeResponse extends TradeResponse {
   nudgeMessage?: string;
 }
 
+export interface CompleteTradeRequest {
+  plannedTarget?: number;
+  plannedStop?: number;
+  confidence?: number;
+  reason?: string;
+}
+
 export const tradesApi = {
   getTrades: async (): Promise<TradeResponse[]> => {
     return apiClient.get<TradeResponse[]>('/trades');
@@ -96,6 +103,10 @@ export const tradesApi = {
 
   updateTrade: async (id: string, data: UpdateTradeRequest): Promise<TradeResponse> => {
     return apiClient.patch<TradeResponse>(`/trades/${id}`, data);
+  },
+
+  completeTrade: async (id: string, data: CompleteTradeRequest): Promise<TradeResponse> => {
+    return apiClient.put<TradeResponse>(`/trades/${id}/complete`, data);
   },
 
   closeTrade: async (id: string, data: CloseTradeRequest): Promise<CloseTradeResponse> => {
