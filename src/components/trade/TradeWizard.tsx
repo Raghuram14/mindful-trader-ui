@@ -23,6 +23,7 @@ import { SymbolCombobox } from "./SymbolCombobox";
 import { RiskOverviewPanel } from "./RiskOverviewPanel";
 import { BrokerSelector } from "../broker/BrokerSelector";
 import { DateTimePicker } from "../ui/date-time-picker";
+import { useRules } from "@/context/RulesContext";
 import type { InstrumentSearchResult } from "@/api/broker";
 import { cn } from "@/lib/utils";
 
@@ -174,8 +175,9 @@ export function TradeWizard({
     ? parseInt(formData.customRisk)
     : formData.riskComfort;
 
-  // Mock account balance (in real app, get from profile context)
-  const accountBalance = 100000;
+  // Get account size from profile
+  const { profile } = useRules();
+  const accountBalance = profile?.accountSize || 100000; // Fallback to 100k if not set
   const accountRiskPercent = (riskAmount / accountBalance) * 100;
 
   const stepCompleted = (step: WizardStep): boolean => {
