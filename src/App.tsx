@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/auth/auth.context";
 import { TradeProvider } from "@/context/TradeContext";
 import { RulesProvider } from "@/context/RulesContext";
+// Admin module - REMOVAL: Delete this import and AdminProvider wrapper below
+import { AdminProvider } from "@/context/AdminContext";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import TodayPage from "./pages/TodayPage";
@@ -23,6 +25,8 @@ import SuggestionsPage from "./pages/SuggestionsPage";
 import { BrokerSettingsPage } from "./pages/BrokerSettingsPage";
 import { BrokerCallbackPage } from "./pages/BrokerCallbackPage";
 import NotFound from "./pages/NotFound";
+// Admin module - REMOVAL: Delete this import
+import AdminPage from "./pages/admin/AdminPage";
 
 const queryClient = new QueryClient();
 
@@ -152,6 +156,15 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      {/* Admin route - REMOVAL: Delete this route block for admin feature removal */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <AdminPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/broker/:broker/callback" element={<BrokerCallbackPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -161,17 +174,20 @@ function AppRoutes() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TradeProvider>
-        <RulesProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AppRoutes />
-            </BrowserRouter>
-          </TooltipProvider>
-        </RulesProvider>
-      </TradeProvider>
+      {/* Admin module - REMOVAL: Remove AdminProvider wrapper to remove admin feature */}
+      <AdminProvider>
+        <TradeProvider>
+          <RulesProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <AppRoutes />
+              </BrowserRouter>
+            </TooltipProvider>
+          </RulesProvider>
+        </TradeProvider>
+      </AdminProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

@@ -2,8 +2,12 @@ import { authService } from '@/auth/auth.service';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
+// Admin impersonation storage key (matches AdminContext)
+const IMPERSONATE_STORAGE_KEY = "mindful_admin_impersonate";
+
 interface RequestOptions extends RequestInit {
   skipAuth?: boolean;
+  skipImpersonation?: boolean;
 }
 
 class ApiClient {
@@ -11,7 +15,7 @@ class ApiClient {
     endpoint: string,
     options: RequestOptions = {}
   ): Promise<T> {
-    const { skipAuth = false, ...fetchOptions } = options;
+    const { skipAuth = false, skipImpersonation = false, ...fetchOptions } = options;
 
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -23,6 +27,21 @@ class ApiClient {
       const token = authService.getToken();
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+
+    // Admin impersonation header - REMOVAL: Delete this block for admin feature removal
+    if (!skipImpersonation) {
+      const impersonateData = sessionStorage.getItem(IMPERSONATE_STORAGE_KEY);
+      if (impersonateData) {
+        try {
+          const user = JSON.parse(impersonateData);
+          if (user?._id) {
+            headers['X-Impersonate-User'] = user._id;
+          }
+        } catch {
+          // Invalid data, ignore
+        }
       }
     }
 
