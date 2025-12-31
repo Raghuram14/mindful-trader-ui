@@ -507,13 +507,15 @@ export default function AddTradePage() {
               instrumentType: formData.instrumentType,
               symbol: formData.symbol,
               optionType: formData.optionType,
+              tradeDate: formData.tradeDateTime.toISOString().split("T")[0],
+              tradeTime: formData.tradeDateTime.toTimeString().slice(0, 5),
               type: formData.type,
               quantity: parseInt(formData.quantity) || 0,
               entryPrice: parseFloat(formData.entryPrice) || 0,
               plannedStop: parseFloat(formData.plannedStop) || 0,
               plannedTarget: parseFloat(formData.plannedTarget) || 0,
               confidence: formData.confidence,
-              riskAmount: formData.customRisk
+              riskComfort: formData.customRisk
                 ? parseInt(formData.customRisk)
                 : formData.riskComfort,
               reason: formData.reason,

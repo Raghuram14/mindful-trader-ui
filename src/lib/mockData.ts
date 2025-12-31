@@ -249,19 +249,44 @@ export interface UserProfile {
 }
 
 export type TradingRuleType = 
+  // Risk Management
   | 'DAILY_LOSS' 
+  | 'WEEKLY_LOSS'
+  | 'MAX_POSITION_SIZE'
+  | 'MAX_OPEN_POSITIONS'
+  | 'DAILY_TARGET'
+  // Discipline
+  | 'MAX_TRADES_PER_DAY'
   | 'MAX_LOSING_TRADES' 
   | 'STOP_AFTER_TARGET'
   | 'STOP_AFTER_LOSS'
-  | 'DAILY_TARGET';
+  | 'NO_AVERAGING_DOWN'
+  | 'MIN_RR_RATIO'
+  // Timing
+  | 'NO_TRADING_BEFORE'
+  | 'NO_TRADING_AFTER'
+  | 'COOLING_OFF_PERIOD'
+  // Psychology
+  | 'STOP_AFTER_CONSECUTIVE_LOSSES'
+  | 'REQUIRE_TRADE_PLAN'
+  | 'MAX_TRADES_AFTER_WIN';
+
+export type RuleCategory = 'RISK' | 'DISCIPLINE' | 'TIMING' | 'PSYCHOLOGY';
 
 export interface TradingRule {
   id: string;
   type: TradingRuleType;
+  category: RuleCategory;
   value: number;
-  valueType?: 'PERCENTAGE' | 'ABSOLUTE'; // For DAILY_LOSS and DAILY_TARGET
+  valueType?: 'PERCENTAGE' | 'ABSOLUTE';
   isActive: boolean;
   description: string;
+  // Custom rule support
+  isCustom?: boolean;
+  customName?: string;
+  // Temporary disable support
+  disabledUntil?: string;
+  disableReason?: string;
 }
 
 export type RuleStatus = 'SAFE' | 'WARNING' | 'BREACHED';
@@ -286,6 +311,7 @@ export const mockTradingRules: TradingRule[] = [
   {
     id: '1',
     type: 'DAILY_LOSS',
+    category: 'RISK',
     value: 2,
     valueType: 'PERCENTAGE',
     isActive: true,
@@ -294,6 +320,7 @@ export const mockTradingRules: TradingRule[] = [
   {
     id: '2',
     type: 'MAX_LOSING_TRADES',
+    category: 'RISK',
     value: 2,
     isActive: true,
     description: 'No more than 2 losing trades per day',
@@ -301,6 +328,7 @@ export const mockTradingRules: TradingRule[] = [
   {
     id: '3',
     type: 'STOP_AFTER_TARGET',
+    category: 'DISCIPLINE',
     value: 1,
     isActive: false,
     description: 'Stop trading once daily target is hit',

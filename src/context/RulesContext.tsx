@@ -1,15 +1,22 @@
-import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect } from 'react';
-import { 
-  UserProfile, 
-  TradingRule, 
-  DailyRuleStatus, 
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useMemo,
+  useEffect,
+} from "react";
+import {
+  UserProfile,
+  TradingRule,
+  DailyRuleStatus,
   RuleStatus,
   mockUserProfile,
-} from '@/lib/mockData';
-import { useTrades } from './TradeContext';
-import { profileApi, UserProfileResponse } from '@/api/profile';
-import { rulesApi, RuleResponse } from '@/api/rules';
-import { useAuth } from '@/auth/auth.context';
+} from "@/lib/mockData";
+import { useTrades } from "./TradeContext";
+import { profileApi, UserProfileResponse } from "@/api/profile";
+import { rulesApi, RuleResponse } from "@/api/rules";
+import { useAuth } from "@/auth/auth.context";
 
 interface RulesContextType {
   profile: UserProfile | null;
@@ -18,7 +25,7 @@ interface RulesContextType {
   isLoadingProfile: boolean;
   isLoadingRules: boolean;
   updateProfile: (profile: UserProfile) => Promise<void>;
-  addRule: (rule: Omit<TradingRule, 'id'>) => Promise<void>;
+  addRule: (rule: Omit<TradingRule, "id">) => Promise<void>;
   updateRule: (id: string, updates: Partial<TradingRule>) => Promise<void>;
   deleteRule: (id: string) => Promise<void>;
 }
@@ -48,18 +55,18 @@ export function RulesProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoadingProfile(true);
       const userProfile = await profileApi.getProfile();
-      
+
       // Map API response to UserProfile format
       const mappedProfile: UserProfile = {
-        name: userProfile.name || '',
-        experienceLevel: userProfile.experienceLevel || 'INTERMEDIATE',
+        name: userProfile.name || "",
+        experienceLevel: userProfile.experienceLevel || "INTERMEDIATE",
         accountSize: userProfile.accountSize || 100000,
-        tradingStyle: userProfile.tradingStyle || 'MIXED',
+        tradingStyle: userProfile.tradingStyle || "MIXED",
       };
-      
+
       setProfile(mappedProfile);
     } catch (error) {
-      console.error('Failed to load profile:', error);
+      console.error("Failed to load profile:", error);
       // Set default profile on error
       setProfile(mockUserProfile);
     } finally {
@@ -79,15 +86,15 @@ export function RulesProvider({ children }: { children: ReactNode }) {
 
       // Map API response to UserProfile format
       const mappedProfile: UserProfile = {
-        name: updated.name || '',
-        experienceLevel: updated.experienceLevel || 'INTERMEDIATE',
+        name: updated.name || "",
+        experienceLevel: updated.experienceLevel || "INTERMEDIATE",
         accountSize: updated.accountSize || 100000,
-        tradingStyle: updated.tradingStyle || 'MIXED',
+        tradingStyle: updated.tradingStyle || "MIXED",
       };
 
       setProfile(mappedProfile);
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      console.error("Failed to update profile:", error);
       throw error;
     }
   };
@@ -96,20 +103,27 @@ export function RulesProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoadingRules(true);
       const rulesData = await rulesApi.getRules();
-      
+
       // Map API response to TradingRule format
-      const mappedRules: TradingRule[] = rulesData.map((rule: RuleResponse) => ({
-        id: rule.id,
-        type: rule.type,
-        value: rule.value,
-        valueType: rule.valueType,
-        isActive: rule.isActive,
-        description: rule.description,
-      }));
-      
+      const mappedRules: TradingRule[] = rulesData.map(
+        (rule: RuleResponse) => ({
+          id: rule.id,
+          type: rule.type,
+          category: rule.category,
+          value: rule.value,
+          valueType: rule.valueType,
+          isActive: rule.isActive,
+          description: rule.description,
+          isCustom: rule.isCustom,
+          customName: rule.customName,
+          disabledUntil: rule.disabledUntil,
+          disableReason: rule.disableReason,
+        })
+      );
+
       setRules(mappedRules);
     } catch (error) {
-      console.error('Failed to load rules:', error);
+      console.error("Failed to load rules:", error);
       // Set empty array on error
       setRules([]);
     } finally {
@@ -117,7 +131,7 @@ export function RulesProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addRule = async (ruleData: Omit<TradingRule, 'id'>): Promise<void> => {
+  const addRule = async (ruleData: Omit<TradingRule, "id">): Promise<void> => {
     try {
       const created = await rulesApi.createRule({
         type: ruleData.type,
@@ -131,20 +145,26 @@ export function RulesProvider({ children }: { children: ReactNode }) {
       const newRule: TradingRule = {
         id: created.id,
         type: created.type,
+        category: created.category,
         value: created.value,
         valueType: created.valueType,
         isActive: created.isActive,
         description: created.description,
+        isCustom: created.isCustom,
+        customName: created.customName,
       };
 
-      setRules(prev => [...prev, newRule]);
+      setRules((prev) => [...prev, newRule]);
     } catch (error) {
-      console.error('Failed to create rule:', error);
+      console.error("Failed to create rule:", error);
       throw error;
     }
   };
 
-  const updateRule = async (id: string, updates: Partial<TradingRule>): Promise<void> => {
+  const updateRule = async (
+    id: string,
+    updates: Partial<TradingRule>
+  ): Promise<void> => {
     try {
       const updated = await rulesApi.updateRule(id, {
         value: updates.value,
@@ -157,17 +177,22 @@ export function RulesProvider({ children }: { children: ReactNode }) {
       const updatedRule: TradingRule = {
         id: updated.id,
         type: updated.type,
+        category: updated.category,
         value: updated.value,
         valueType: updated.valueType,
         isActive: updated.isActive,
         description: updated.description,
+        isCustom: updated.isCustom,
+        customName: updated.customName,
+        disabledUntil: updated.disabledUntil,
+        disableReason: updated.disableReason,
       };
 
-      setRules(prev =>
-        prev.map(rule => (rule.id === id ? updatedRule : rule))
+      setRules((prev) =>
+        prev.map((rule) => (rule.id === id ? updatedRule : rule))
       );
     } catch (error) {
-      console.error('Failed to update rule:', error);
+      console.error("Failed to update rule:", error);
       throw error;
     }
   };
@@ -175,9 +200,9 @@ export function RulesProvider({ children }: { children: ReactNode }) {
   const deleteRule = async (id: string): Promise<void> => {
     try {
       await rulesApi.deleteRule(id);
-      setRules(prev => prev.filter(rule => rule.id !== id));
+      setRules((prev) => prev.filter((rule) => rule.id !== id));
     } catch (error) {
-      console.error('Failed to delete rule:', error);
+      console.error("Failed to delete rule:", error);
       throw error;
     }
   };
@@ -187,36 +212,40 @@ export function RulesProvider({ children }: { children: ReactNode }) {
   const dailyStatus = useMemo((): DailyRuleStatus[] => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    const todayTrades = closedTrades.filter(trade => {
+
+    const todayTrades = closedTrades.filter((trade) => {
       if (!trade.closedAt) return false;
       const tradeDate = new Date(trade.closedAt);
       tradeDate.setHours(0, 0, 0, 0);
       return tradeDate.getTime() === today.getTime();
     });
 
-    const losingTrades = todayTrades.filter(t => t.result === 'loss');
+    const losingTrades = todayTrades.filter((t) => t.result === "loss");
     const totalLoss = todayTrades
-      .filter(t => t.result === 'loss')
+      .filter((t) => t.result === "loss")
       .reduce((sum, t) => sum + (t.riskComfort || 0), 0);
-    
+
     // Calculate total profit from today's trades
     const totalProfit = todayTrades
-      .filter(t => t.profitLoss !== undefined)
+      .filter((t) => t.profitLoss !== undefined)
       .reduce((sum, t) => sum + (t.profitLoss || 0), 0);
 
     return rules
-      .filter(rule => rule.isActive)
-      .map(rule => {
-        if (rule.type === 'DAILY_LOSS') {
-          const limitValue = rule.valueType === 'PERCENTAGE'
-            ? (profile?.accountSize || 100000) * (rule.value / 100)
-            : rule.value;
+      .filter((rule) => rule.isActive)
+      .map((rule) => {
+        if (rule.type === "DAILY_LOSS") {
+          const limitValue =
+            rule.valueType === "PERCENTAGE"
+              ? (profile?.accountSize || 100000) * (rule.value / 100)
+              : rule.value;
           const remaining = Math.max(0, limitValue - totalLoss);
-          const status: RuleStatus = 
-            remaining === 0 ? 'BREACHED' :
-            remaining <= limitValue * 0.2 ? 'WARNING' : 'SAFE';
-          
+          const status: RuleStatus =
+            remaining === 0
+              ? "BREACHED"
+              : remaining <= limitValue * 0.2
+              ? "WARNING"
+              : "SAFE";
+
           return {
             ruleId: rule.id,
             currentValue: totalLoss,
@@ -226,15 +255,19 @@ export function RulesProvider({ children }: { children: ReactNode }) {
           };
         }
 
-        if (rule.type === 'DAILY_TARGET') {
-          const targetValue = rule.valueType === 'PERCENTAGE'
-            ? (profile?.accountSize || 100000) * (rule.value / 100)
-            : rule.value;
+        if (rule.type === "DAILY_TARGET") {
+          const targetValue =
+            rule.valueType === "PERCENTAGE"
+              ? (profile?.accountSize || 100000) * (rule.value / 100)
+              : rule.value;
           const remaining = Math.max(0, targetValue - totalProfit);
-          const status: RuleStatus = 
-            remaining === 0 ? 'BREACHED' :
-            remaining <= targetValue * 0.2 ? 'WARNING' : 'SAFE';
-          
+          const status: RuleStatus =
+            remaining === 0
+              ? "BREACHED"
+              : remaining <= targetValue * 0.2
+              ? "WARNING"
+              : "SAFE";
+
           return {
             ruleId: rule.id,
             currentValue: totalProfit,
@@ -244,12 +277,11 @@ export function RulesProvider({ children }: { children: ReactNode }) {
           };
         }
 
-        if (rule.type === 'MAX_LOSING_TRADES') {
+        if (rule.type === "MAX_LOSING_TRADES") {
           const remaining = Math.max(0, rule.value - losingTrades.length);
-          const status: RuleStatus = 
-            remaining === 0 ? 'BREACHED' :
-            remaining === 1 ? 'WARNING' : 'SAFE';
-          
+          const status: RuleStatus =
+            remaining === 0 ? "BREACHED" : remaining === 1 ? "WARNING" : "SAFE";
+
           return {
             ruleId: rule.id,
             currentValue: losingTrades.length,
@@ -265,7 +297,7 @@ export function RulesProvider({ children }: { children: ReactNode }) {
           currentValue: 0,
           limitValue: rule.value,
           remainingValue: rule.value,
-          status: 'SAFE' as RuleStatus,
+          status: "SAFE" as RuleStatus,
         };
       });
   }, [rules, profile, closedTrades]);
@@ -292,8 +324,7 @@ export function RulesProvider({ children }: { children: ReactNode }) {
 export function useRules() {
   const context = useContext(RulesContext);
   if (context === undefined) {
-    throw new Error('useRules must be used within a RulesProvider');
+    throw new Error("useRules must be used within a RulesProvider");
   }
   return context;
 }
-

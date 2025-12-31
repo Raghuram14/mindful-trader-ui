@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 
 export default function TodayPage() {
-  const { getOpenTrades, refreshTrades } = useTrades();
+  const { getOpenTrades, loadTrades } = useTrades();
   const openTrades = getOpenTrades();
   const { toast } = useToast();
   const [completingTrade, setCompletingTrade] = useState<any | null>(null);
@@ -46,7 +46,7 @@ export default function TodayPage() {
         title: "Trade completed",
         description: "Your trading plan has been saved.",
       });
-      await refreshTrades();
+      await loadTrades();
       setCompletingTrade(null);
     } catch (error) {
       toast({

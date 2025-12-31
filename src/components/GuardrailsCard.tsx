@@ -1,8 +1,47 @@
-import { Shield, AlertTriangle, CheckCircle2 } from "lucide-react";
+import {
+  Shield,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Target,
+  Brain,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { useRules } from "@/context/RulesContext";
-import { formatCurrency } from "@/lib/mockData";
-import { TradingRuleType } from "@/lib/mockData";
+import { formatCurrency, TradingRuleType, RuleCategory } from "@/lib/mockData";
+import {
+  RULE_TEMPLATES,
+  CATEGORY_LABELS,
+  formatTimeValue,
+  BOOLEAN_RULES,
+} from "@/api/rules";
+import { cn } from "@/lib/utils";
+
+// Category icons
+const CategoryIcon = ({
+  category,
+  className,
+}: {
+  category: RuleCategory;
+  className?: string;
+}) => {
+  const icons = {
+    RISK: Shield,
+    DISCIPLINE: Target,
+    TIMING: Clock,
+    PSYCHOLOGY: Brain,
+  };
+  const Icon = icons[category];
+  return <Icon className={className} />;
+};
+
+// Category colors
+const CATEGORY_COLORS: Record<RuleCategory, string> = {
+  RISK: "text-red-500",
+  DISCIPLINE: "text-blue-500",
+  TIMING: "text-amber-500",
+  PSYCHOLOGY: "text-purple-500",
+};
 
 export function GuardrailsCard() {
   const { rules, dailyStatus, profile } = useRules();
@@ -57,47 +96,68 @@ export function GuardrailsCard() {
     }
   };
 
-  const getRuleLabel = (rule: TradingRuleType) => {
-    switch (rule) {
-      case "DAILY_LOSS":
-        return "Daily loss limit";
-      case "MAX_LOSING_TRADES":
-        return "Losing trades";
-      case "DAILY_TARGET":
-        return "Daily target";
-      case "STOP_AFTER_TARGET":
-        return "Stop after target";
-      case "STOP_AFTER_LOSS":
-        return "Stop after loss";
-      default:
-        return "Rule";
-    }
+  const getRuleLabel = (ruleType: TradingRuleType) => {
+    const template = RULE_TEMPLATES.find((t) => t.type === ruleType);
+    return template?.name || ruleType;
   };
 
   const formatRuleValue = (status: any, rule: any) => {
-    if (rule.type === "DAILY_LOSS") {
-      // Check if percentage or absolute
-      if (rule.valueType === "PERCENTAGE") {
-        // For percentage, remainingValue is already in absolute terms (currency)
-        return `${formatCurrency(status.remainingValue)} remaining`;
-      }
+    // Time-based rules
+    if (rule.type === "NO_TRADING_BEFORE" || rule.type === "NO_TRADING_AFTER") {
+      return formatTimeValue(rule.value);
+    }
+
+    // Boolean rules
+    if (BOOLEAN_RULES.includes(rule.type)) {
+      return status.status === "BREACHED" ? "Violated" : "Active";
+    }
+
+    // Percentage-based loss/target rules
+    if (rule.type === "DAILY_LOSS" || rule.type === "WEEKLY_LOSS") {
       return `${formatCurrency(status.remainingValue)} remaining`;
     }
-    if (rule.type === "MAX_LOSING_TRADES") {
-      return `${status.currentValue} of ${status.limitValue} used`;
-    }
+
     if (rule.type === "DAILY_TARGET") {
-      // Show current profit achieved and remaining target
       const currentProfit = status.currentValue || 0;
       const remaining = status.remainingValue || 0;
 
       if (currentProfit > 0) {
-        return `${formatCurrency(currentProfit)} achieved • ${formatCurrency(
+        return `${formatCurrency(currentProfit)} achieved · ${formatCurrency(
           remaining
         )} remaining`;
       }
       return `${formatCurrency(remaining)} remaining`;
     }
+
+    // Count-based rules
+    if (
+      rule.type === "MAX_LOSING_TRADES" ||
+      rule.type === "MAX_TRADES_PER_DAY" ||
+      rule.type === "MAX_OPEN_POSITIONS" ||
+      rule.type === "STOP_AFTER_CONSECUTIVE_LOSSES" ||
+      rule.type === "MAX_TRADES_AFTER_WIN"
+    ) {
+      return `${status.currentValue} of ${status.limitValue}`;
+    }
+
+    // Position size
+    if (rule.type === "MAX_POSITION_SIZE") {
+      if (rule.valueType === "PERCENTAGE") {
+        return `Max ${rule.value}% per trade`;
+      }
+      return `Max ${formatCurrency(rule.value)} per trade`;
+    }
+
+    // Cooling off
+    if (rule.type === "COOLING_OFF_PERIOD") {
+      return `${rule.value} min after loss`;
+    }
+
+    // R:R ratio
+    if (rule.type === "MIN_RR_RATIO") {
+      return `Min ${rule.value}:1 ratio`;
+    }
+
     return "Active";
   };
 
@@ -106,7 +166,7 @@ export function GuardrailsCard() {
       return "You've reached a limit you set to protect yourself.";
     }
     if (status.status === "WARNING") {
-      return "You're approaching a limit you set to protect today's capital.";
+      return "You're approaching a limit.";
     }
     return null;
   };
@@ -117,6 +177,26 @@ export function GuardrailsCard() {
     ? "WARNING"
     : "SAFE";
 
+  // Group active rules by category for display
+  const rulesByCategory: Record<RuleCategory, typeof activeRules> = {
+    RISK: [],
+    DISCIPLINE: [],
+    TIMING: [],
+    PSYCHOLOGY: [],
+  };
+
+  activeRules.forEach((rule) => {
+    const category = rule.category || "DISCIPLINE";
+    if (rulesByCategory[category]) {
+      rulesByCategory[category].push(rule);
+    }
+  });
+
+  // Get categories that have active rules
+  const activeCategories = (
+    Object.keys(rulesByCategory) as RuleCategory[]
+  ).filter((cat) => rulesByCategory[cat].length > 0);
+
   return (
     <div className={`card-calm border-l-4 ${getStatusColor(overallStatus)}`}>
       <div className="flex items-start gap-3 mb-4">
@@ -126,46 +206,64 @@ export function GuardrailsCard() {
             Today's Guardrails
           </p>
           <p className="text-xs text-muted-foreground">
-            The limits you've set to support today's decisions
+            {activeRules.length} active rule
+            {activeRules.length !== 1 ? "s" : ""} protecting you
           </p>
         </div>
       </div>
 
-      <div className="space-y-3">
-        {dailyStatus.map((status) => {
-          const rule = rules.find((r) => r.id === status.ruleId);
-          if (!rule) return null;
-
-          return (
-            <div
-              key={status.ruleId}
-              className={`p-3 rounded-lg ${
-                status.status === "BREACHED"
-                  ? "bg-destructive/10 border border-destructive/20"
-                  : status.status === "WARNING"
-                  ? "bg-warning/10 border border-warning/20"
-                  : "bg-secondary/50 border border-border"
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(status.status)}
-                  <span className="text-sm font-medium text-foreground">
-                    {getRuleLabel(rule.type)}
-                  </span>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground ml-6">
-                {formatRuleValue(status, rule)}
-              </p>
-              {getStatusMessage(status, rule) && (
-                <p className="text-xs text-muted-foreground mt-2 ml-6 italic">
-                  {getStatusMessage(status, rule)}
-                </p>
-              )}
+      {/* Category-based display */}
+      <div className="space-y-4">
+        {activeCategories.map((category) => (
+          <div key={category}>
+            <div className="flex items-center gap-2 mb-2">
+              <CategoryIcon
+                category={category}
+                className={cn("w-3.5 h-3.5", CATEGORY_COLORS[category])}
+              />
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                {CATEGORY_LABELS[category]}
+              </span>
             </div>
-          );
-        })}
+            <div className="space-y-2">
+              {rulesByCategory[category].map((rule) => {
+                const status = dailyStatus.find((s) => s.ruleId === rule.id);
+                const ruleStatus = status?.status || "SAFE";
+
+                return (
+                  <div
+                    key={rule.id}
+                    className={cn(
+                      "p-3 rounded-lg",
+                      ruleStatus === "BREACHED"
+                        ? "bg-destructive/10 border border-destructive/20"
+                        : ruleStatus === "WARNING"
+                        ? "bg-warning/10 border border-warning/20"
+                        : "bg-secondary/50 border border-border"
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(ruleStatus)}
+                        <span className="text-sm font-medium text-foreground">
+                          {getRuleLabel(rule.type)}
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {status && formatRuleValue(status, rule)}
+                      </span>
+                    </div>
+                    {status && getStatusMessage(status, rule) && (
+                      <p className="text-xs text-muted-foreground mt-1 ml-6 italic">
+                        {getStatusMessage(status, rule)}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="mt-4 pt-4 border-t border-border">

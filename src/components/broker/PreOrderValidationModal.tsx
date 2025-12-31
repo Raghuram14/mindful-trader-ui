@@ -94,7 +94,13 @@ export function PreOrderValidationModal({
                 <div className="flex items-start gap-3">
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
-                      <Badge variant={getOutcomeColor(violation.outcome)}>
+                      <Badge
+                        variant={
+                          violation.outcome === "BLOCK"
+                            ? "destructive"
+                            : "secondary"
+                        }
+                      >
                         {violation.ruleType.replace(/_/g, " ")}
                       </Badge>
                       <Badge variant="outline">

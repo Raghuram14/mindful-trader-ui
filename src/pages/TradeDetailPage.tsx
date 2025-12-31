@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Clock, Target, Shield, AlertTriangle } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -14,9 +14,17 @@ const emotions = [
 export default function TradeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getTradeById } = useTrades();
+  const { getTradeById, updateTradeEmotion } = useTrades();
 
   const trade = getTradeById(id || "");
+
+  const handleEmotionTap = useCallback(
+    async (emotionId: "fear" | "neutral" | "confident") => {
+      if (!id) return;
+      await updateTradeEmotion(id, emotionId);
+    },
+    [id, updateTradeEmotion]
+  );
 
   // Redirect to exit page for open trades (new flow)
   useEffect(() => {

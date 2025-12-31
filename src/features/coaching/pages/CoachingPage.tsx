@@ -1,29 +1,36 @@
 /**
  * Coaching Page (Homepage)
- * 
- * Daily coaching experience with mindset check and behavioral guidance
+ *
+ * Daily coaching experience with mindset check, behavioral guidance, and end-of-day reflection
  */
 
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { AppLayout } from '@/components/layout/AppLayout';
-import { Loader2, Plus, TrendingUp, ArrowRight } from 'lucide-react';
-import { DailyMindsetCheck } from '../components/DailyMindsetCheck';
-import { CoachingGuidance } from '../components/CoachingGuidance';
-import { useCoaching } from '../hooks/useCoaching';
-import { useTrades } from '@/context/TradeContext';
-import { Button } from '@/components/ui/button';
-import { GuardrailsCard } from '@/components/GuardrailsCard';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Loader2, Plus, TrendingUp, ArrowRight, Sunset } from "lucide-react";
+import { DailyMindsetCheck } from "../components/DailyMindsetCheck";
+import { CoachingGuidance } from "../components/CoachingGuidance";
+import { DailyReflection } from "../components/DailyReflection";
+import { useCoaching } from "../hooks/useCoaching";
+import { useTrades } from "@/context/TradeContext";
+import { Button } from "@/components/ui/button";
+import { GuardrailsCard } from "@/components/GuardrailsCard";
+import { cn } from "@/lib/utils";
+
+// Helper to check if it's evening (after 3 PM)
+function isEveningTime(): boolean {
+  const hour = new Date().getHours();
+  return hour >= 15; // 3 PM or later
+}
 
 export default function CoachingPage() {
-  const { 
-    mindsetCheck, 
-    guidance, 
-    hasCheckedToday, 
-    isLoading, 
+  const {
+    mindsetCheck,
+    guidance,
+    hasCheckedToday,
+    isLoading,
     error,
-    refreshCoaching 
+    refreshCoaching,
   } = useCoaching();
   const { getOpenTrades } = useTrades();
   const [mindsetSubmitted, setMindsetSubmitted] = useState(false);
@@ -49,19 +56,22 @@ export default function CoachingPage() {
     const handleTradeClosed = (event: Event) => {
       const customEvent = event as CustomEvent;
       const isLoss = customEvent.detail?.isLoss;
-      
+
       // Always refresh, but especially important for losses
-      setTimeout(() => {
-        refreshCoaching();
-      }, isLoss ? 500 : 1000);
+      setTimeout(
+        () => {
+          refreshCoaching();
+        },
+        isLoss ? 500 : 1000
+      );
     };
 
-    window.addEventListener('trade-created', handleTradeCreated);
-    window.addEventListener('trade-closed', handleTradeClosed);
+    window.addEventListener("trade-created", handleTradeCreated);
+    window.addEventListener("trade-closed", handleTradeClosed);
 
     return () => {
-      window.removeEventListener('trade-created', handleTradeCreated);
-      window.removeEventListener('trade-closed', handleTradeClosed);
+      window.removeEventListener("trade-created", handleTradeCreated);
+      window.removeEventListener("trade-closed", handleTradeClosed);
     };
   }, [refreshCoaching]);
 
@@ -71,7 +81,9 @@ export default function CoachingPage() {
         {/* Header */}
         <header className="mb-8">
           <h1 className="page-title">Today</h1>
-          <p className="page-subtitle mt-1">A calm focus for your trading day</p>
+          <p className="page-subtitle mt-1">
+            A calm focus for your trading day
+          </p>
         </header>
 
         {/* Loading State */}
@@ -85,7 +97,9 @@ export default function CoachingPage() {
         {error && !isLoading && (
           <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 mb-6">
             <p className="text-sm text-destructive">
-              {error instanceof Error ? error.message : 'Failed to load coaching guidance'}
+              {error instanceof Error
+                ? error.message
+                : "Failed to load coaching guidance"}
             </p>
           </div>
         )}
@@ -95,21 +109,19 @@ export default function CoachingPage() {
           <div className="space-y-6">
             {/* Daily Check-In - Show first if not submitted today */}
             {!hasCheckedToday && !mindsetSubmitted && (
-              <DailyMindsetCheck 
+              <DailyMindsetCheck
                 onSubmitted={() => {
                   setMindsetSubmitted(true);
                   // Refresh coaching after mindset check is submitted
                   setTimeout(() => {
                     refreshCoaching();
                   }, 500);
-                }} 
+                }}
               />
             )}
 
             {/* Coaching Guidance - Show if available (works with or without mindset check) */}
-            {guidance && (
-              <CoachingGuidance guidance={guidance} />
-            )}
+            {guidance && <CoachingGuidance guidance={guidance} />}
 
             {/* Empty State - No guidance yet */}
             {!guidance && hasCheckedToday && (
@@ -122,6 +134,11 @@ export default function CoachingPage() {
 
             {/* Today's Guardrails */}
             <GuardrailsCard />
+
+            {/* End of Day Reflection - Show in evening or if they have trades today */}
+            {isEveningTime() && guidance && (
+              <DailyReflection todaysFocus={guidance.focus} />
+            )}
 
             {/* Open Trades - Condensed View */}
             {openTrades.length > 0 && (
@@ -142,7 +159,7 @@ export default function CoachingPage() {
                     </Link>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   {openTrades.slice(0, 3).map((trade) => (
                     <Link
@@ -151,21 +168,26 @@ export default function CoachingPage() {
                       className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
                     >
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-medium text-foreground">{trade.symbol}</span>
+                        <span className="text-sm font-medium text-foreground">
+                          {trade.symbol}
+                        </span>
                         <span className="text-xs px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground">
                           {trade.instrumentType}
                         </span>
-                        {trade.instrumentType === 'OPTIONS' && trade.optionType && (
-                          <span className="text-xs px-1.5 py-0.5 rounded bg-accent text-accent-foreground">
-                            {trade.optionType}
-                          </span>
-                        )}
-                        <span className={cn(
-                          'text-xs px-1.5 py-0.5 rounded',
-                          trade.type === 'buy' 
-                            ? 'bg-success/20 text-success' 
-                            : 'bg-destructive/20 text-destructive'
-                        )}>
+                        {trade.instrumentType === "OPTIONS" &&
+                          trade.optionType && (
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-accent text-accent-foreground">
+                              {trade.optionType}
+                            </span>
+                          )}
+                        <span
+                          className={cn(
+                            "text-xs px-1.5 py-0.5 rounded",
+                            trade.type === "buy"
+                              ? "bg-success/20 text-success"
+                              : "bg-destructive/20 text-destructive"
+                          )}
+                        >
                           {trade.type.toUpperCase()}
                         </span>
                       </div>
@@ -202,4 +224,3 @@ export default function CoachingPage() {
     </AppLayout>
   );
 }
-
