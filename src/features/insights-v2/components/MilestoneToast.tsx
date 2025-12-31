@@ -1,6 +1,6 @@
 /**
  * Milestone Toast
- * 
+ *
  * Subtle, auto-dismissing toast for newly achieved milestones.
  * Design Philosophy:
  * - Calm recognition: "You've reached a milestone" not "Achievement unlocked!"
@@ -9,16 +9,15 @@
  * - Acknowledges milestone on display
  */
 
-import { useEffect, useState, useCallback } from 'react';
-import { streaksApi, Milestone, MilestoneCategory, MilestoneType } from '@/api/streaks';
-import { cn } from '@/lib/utils';
-import { 
-  Calendar,
-  TrendingUp,
-  Eye,
-  Heart,
-  X
-} from 'lucide-react';
+import { useEffect, useState, useCallback } from "react";
+import {
+  streaksApi,
+  Milestone,
+  MilestoneCategory,
+  MilestoneType,
+} from "@/api/streaks";
+import { cn } from "@/lib/utils";
+import { Calendar, TrendingUp, Eye, Heart, X } from "lucide-react";
 
 interface MilestoneToastProps {
   className?: string;
@@ -29,33 +28,33 @@ interface MilestoneToastProps {
  */
 function getCategoryMeta(category: MilestoneCategory) {
   switch (category) {
-    case 'CONSISTENCY':
+    case "CONSISTENCY":
       return {
         icon: Calendar,
-        color: 'text-blue-500',
-        bg: 'bg-blue-500/10',
-        borderColor: 'border-blue-500/20',
+        color: "text-blue-500",
+        bg: "bg-blue-500/10",
+        borderColor: "border-blue-500/20",
       };
-    case 'GROWTH':
+    case "GROWTH":
       return {
         icon: TrendingUp,
-        color: 'text-green-500',
-        bg: 'bg-green-500/10',
-        borderColor: 'border-green-500/20',
+        color: "text-green-500",
+        bg: "bg-green-500/10",
+        borderColor: "border-green-500/20",
       };
-    case 'AWARENESS':
+    case "AWARENESS":
       return {
         icon: Eye,
-        color: 'text-purple-500',
-        bg: 'bg-purple-500/10',
-        borderColor: 'border-purple-500/20',
+        color: "text-purple-500",
+        bg: "bg-purple-500/10",
+        borderColor: "border-purple-500/20",
       };
-    case 'RESILIENCE':
+    case "RESILIENCE":
       return {
         icon: Heart,
-        color: 'text-amber-500',
-        bg: 'bg-amber-500/10',
-        borderColor: 'border-amber-500/20',
+        color: "text-amber-500",
+        bg: "bg-amber-500/10",
+        borderColor: "border-amber-500/20",
       };
   }
 }
@@ -98,27 +97,26 @@ function getMilestoneMessage(type: MilestoneType): string {
 /**
  * Single milestone toast item
  */
-function MilestoneToastItem({ 
-  milestone, 
-  onDismiss 
-}: { 
-  milestone: Milestone; 
+function MilestoneToastItem({
+  milestone,
+  onDismiss,
+}: {
+  milestone: Milestone;
   onDismiss: () => void;
 }) {
   const meta = getCategoryMeta(milestone.category);
   const Icon = meta.icon;
-  
   // Auto-dismiss after 4 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       onDismiss();
     }, 4000);
-    
+
     return () => clearTimeout(timer);
   }, [onDismiss]);
-  
+
   return (
-    <div 
+    <div
       className={cn(
         "relative flex items-start gap-3 p-4 rounded-lg border shadow-lg",
         "bg-card",
@@ -129,19 +127,15 @@ function MilestoneToastItem({
       <div className={cn("rounded-lg p-2", meta.bg)}>
         <Icon className={cn("w-4 h-4", meta.color)} />
       </div>
-      
       <div className="flex-1 pr-6">
         <p className="text-xs font-medium text-muted-foreground mb-0.5">
           Journey marker
         </p>
-        <p className="text-sm font-medium text-foreground">
-          {milestone.title}
-        </p>
+        <p className="text-sm font-medium text-foreground">{milestone.title}</p>
         <p className="text-xs text-muted-foreground mt-1">
           {getMilestoneMessage(milestone.type)}
         </p>
       </div>
-      
       <button
         onClick={onDismiss}
         className="absolute top-2 right-2 p-1 rounded-full hover:bg-muted transition-colors"
@@ -155,7 +149,8 @@ function MilestoneToastItem({
 
 export function MilestoneToast({ className }: MilestoneToastProps) {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [displayedMilestone, setDisplayedMilestone] = useState<Milestone | null>(null);
+  const [displayedMilestone, setDisplayedMilestone] =
+    useState<Milestone | null>(null);
 
   // Fetch unacknowledged milestones on mount
   useEffect(() => {
@@ -163,13 +158,12 @@ export function MilestoneToast({ className }: MilestoneToastProps) {
       try {
         const unacknowledged = await streaksApi.getUnacknowledgedMilestones();
         setMilestones(unacknowledged);
-        
         // Show the first one
         if (unacknowledged.length > 0) {
           setDisplayedMilestone(unacknowledged[0]);
         }
       } catch (err) {
-        console.error('Failed to fetch milestones:', err);
+        console.error("Failed to fetch milestones:", err);
       }
     }
 
@@ -179,18 +173,17 @@ export function MilestoneToast({ className }: MilestoneToastProps) {
   // Handle dismissing a milestone
   const handleDismiss = useCallback(async () => {
     if (!displayedMilestone) return;
-    
     try {
       // Acknowledge this milestone
       await streaksApi.acknowledgeMilestone(displayedMilestone._id);
     } catch (err) {
-      console.error('Failed to acknowledge milestone:', err);
+      console.error("Failed to acknowledge milestone:", err);
     }
-    
+
     // Move to next milestone or clear
-    setMilestones(prev => {
-      const remaining = prev.filter(m => m._id !== displayedMilestone._id);
-      
+    setMilestones((prev) => {
+      const remaining = prev.filter((m) => m._id !== displayedMilestone._id);
+
       // Show next if available
       if (remaining.length > 0) {
         // Small delay before showing next
@@ -200,7 +193,6 @@ export function MilestoneToast({ className }: MilestoneToastProps) {
       } else {
         setDisplayedMilestone(null);
       }
-      
       return remaining;
     });
   }, [displayedMilestone]);
@@ -211,15 +203,12 @@ export function MilestoneToast({ className }: MilestoneToastProps) {
   }
 
   return (
-    <div className={cn(
-      "fixed bottom-4 right-4 z-50 max-w-sm",
-      className
-    )}>
-      <MilestoneToastItem 
-        milestone={displayedMilestone} 
+    <div className={cn("fixed bottom-4 right-4 z-50 max-w-sm", className)}>
+      <MilestoneToastItem
+        milestone={displayedMilestone}
         onDismiss={handleDismiss}
       />
-      
+
       {/* Counter for remaining milestones */}
       {milestones.length > 1 && (
         <p className="text-xs text-muted-foreground text-right mt-1 mr-2">

@@ -1,13 +1,25 @@
 /**
  * Pattern Frequency Card
- * 
+ *
  * Shows which behavioral patterns appear most/least often.
  * Uses non-judgmental language - patterns are observations, not verdicts.
  */
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Minus, AlertCircle, CheckCircle2 } from "lucide-react";
+import {
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 import { type PatternFrequency } from "@/api/tradingDNA";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +31,10 @@ interface PatternFrequencyCardProps {
 /**
  * Human-readable pattern names and descriptions
  */
-const PATTERN_INFO: Record<string, { label: string; description: string; isPositive: boolean }> = {
+const PATTERN_INFO: Record<
+  string,
+  { label: string; description: string; isPositive: boolean }
+> = {
   EARLY_EXIT_BIAS: {
     label: "Early Exits",
     description: "Closing trades before reaching target",
@@ -87,16 +102,16 @@ const PATTERN_INFO: Record<string, { label: string; description: string; isPosit
   },
 };
 
-export function PatternFrequencyCard({ 
-  dominantPatterns, 
-  rarePatterns 
+export function PatternFrequencyCard({
+  dominantPatterns,
+  rarePatterns,
 }: PatternFrequencyCardProps) {
   // Separate dominant patterns into concerning and positive
   const concerningPatterns = dominantPatterns.filter(
-    p => !PATTERN_INFO[p.patternType]?.isPositive
+    (p) => !PATTERN_INFO[p.patternType]?.isPositive
   );
   const positivePatterns = dominantPatterns.filter(
-    p => PATTERN_INFO[p.patternType]?.isPositive
+    (p) => PATTERN_INFO[p.patternType]?.isPositive
   );
 
   return (
@@ -117,9 +132,9 @@ export function PatternFrequencyCard({
             </h4>
             <div className="space-y-2">
               {positivePatterns.map((pattern) => (
-                <PatternRow 
-                  key={pattern.patternType} 
-                  pattern={pattern} 
+                <PatternRow
+                  key={pattern.patternType}
+                  pattern={pattern}
                   variant="positive"
                 />
               ))}
@@ -136,9 +151,9 @@ export function PatternFrequencyCard({
             </h4>
             <div className="space-y-2">
               {concerningPatterns.map((pattern) => (
-                <PatternRow 
-                  key={pattern.patternType} 
-                  pattern={pattern} 
+                <PatternRow
+                  key={pattern.patternType}
+                  pattern={pattern}
                   variant="concerning"
                 />
               ))}
@@ -156,12 +171,12 @@ export function PatternFrequencyCard({
               {rarePatterns.map((pattern) => {
                 const info = PATTERN_INFO[pattern.patternType];
                 return (
-                  <Badge 
-                    key={pattern.patternType} 
+                  <Badge
+                    key={pattern.patternType}
                     variant="secondary"
                     className={cn(
                       "text-xs font-normal",
-                      info?.isPositive 
+                      info?.isPositive
                         ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
                         : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
                     )}
@@ -187,16 +202,16 @@ export function PatternFrequencyCard({
   );
 }
 
-function PatternRow({ 
-  pattern, 
-  variant 
-}: { 
-  pattern: PatternFrequency; 
-  variant: 'positive' | 'concerning';
+function PatternRow({
+  pattern,
+  variant,
+}: {
+  pattern: PatternFrequency;
+  variant: "positive" | "concerning";
 }) {
   const info = PATTERN_INFO[pattern.patternType] || {
-    label: pattern.patternType.replace(/_/g, ' '),
-    description: '',
+    label: pattern.patternType.replace(/_/g, " "),
+    description: "",
     isPositive: false,
   };
 
@@ -207,9 +222,11 @@ function PatternRow({
   }[pattern.trend];
 
   const trendColor = {
-    MORE_FREQUENT: variant === 'positive' ? 'text-emerald-500' : 'text-amber-500',
-    STABLE: 'text-muted-foreground',
-    LESS_FREQUENT: variant === 'positive' ? 'text-amber-500' : 'text-emerald-500',
+    MORE_FREQUENT:
+      variant === "positive" ? "text-emerald-500" : "text-amber-500",
+    STABLE: "text-muted-foreground",
+    LESS_FREQUENT:
+      variant === "positive" ? "text-amber-500" : "text-emerald-500",
   }[pattern.trend];
 
   return (

@@ -1,19 +1,25 @@
 /**
  * Trait Radar Chart
- * 
+ *
  * Visual representation of behavioral trait scores using Recharts RadarChart.
  * Shows the "shape" of the trader's behavioral DNA.
  */
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { 
-  RadarChart, 
-  PolarGrid, 
-  PolarAngleAxis, 
-  PolarRadiusAxis, 
-  Radar, 
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
   ResponsiveContainer,
-  Tooltip
+  Tooltip,
 } from "recharts";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { type TraitScore, TRAIT_DISPLAY } from "@/api/tradingDNA";
@@ -25,7 +31,7 @@ interface TraitRadarChartProps {
 
 export function TraitRadarChart({ traits }: TraitRadarChartProps) {
   // Transform traits for Recharts
-  const chartData = traits.map(trait => ({
+  const chartData = traits.map((trait) => ({
     trait: TRAIT_DISPLAY[trait.dimension].title,
     score: trait.score,
     stability: trait.stability,
@@ -36,33 +42,45 @@ export function TraitRadarChart({ traits }: TraitRadarChartProps) {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const trait = traits.find(
-        t => TRAIT_DISPLAY[t.dimension].title === payload[0].payload.trait
+        (t) => TRAIT_DISPLAY[t.dimension].title === payload[0].payload.trait
       );
       if (!trait) return null;
 
       return (
         <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
-          <p className="font-medium text-sm">{TRAIT_DISPLAY[trait.dimension].title}</p>
+          <p className="font-medium text-sm">
+            {TRAIT_DISPLAY[trait.dimension].title}
+          </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Score: <span className="font-medium text-foreground">{trait.score}/100</span>
+            Score:{" "}
+            <span className="font-medium text-foreground">
+              {trait.score}/100
+            </span>
           </p>
           <p className="text-xs text-muted-foreground">
-            Stability: <span className="font-medium text-foreground">{trait.stability}%</span>
+            Stability:{" "}
+            <span className="font-medium text-foreground">
+              {trait.stability}%
+            </span>
           </p>
           <div className="flex items-center gap-1 mt-1">
-            {trait.trend === 'IMPROVING' && (
+            {trait.trend === "IMPROVING" && (
               <>
                 <TrendingUp className="w-3 h-3 text-emerald-500" />
-                <span className="text-xs text-emerald-600 dark:text-emerald-400">Improving</span>
+                <span className="text-xs text-emerald-600 dark:text-emerald-400">
+                  Improving
+                </span>
               </>
             )}
-            {trait.trend === 'DECLINING' && (
+            {trait.trend === "DECLINING" && (
               <>
                 <TrendingDown className="w-3 h-3 text-amber-500" />
-                <span className="text-xs text-amber-600 dark:text-amber-400">Needs attention</span>
+                <span className="text-xs text-amber-600 dark:text-amber-400">
+                  Needs attention
+                </span>
               </>
             )}
-            {trait.trend === 'STABLE' && (
+            {trait.trend === "STABLE" && (
               <>
                 <Minus className="w-3 h-3 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">Stable</span>
@@ -89,23 +107,23 @@ export function TraitRadarChart({ traits }: TraitRadarChartProps) {
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={chartData} cx="50%" cy="50%" outerRadius="70%">
-                <PolarGrid 
+                <PolarGrid
                   gridType="polygon"
                   stroke="#4b5563"
                   strokeOpacity={0.4}
                 />
-                <PolarAngleAxis 
-                  dataKey="trait" 
-                  tick={{ 
-                    fontSize: 12, 
-                    fill: '#9ca3af',
-                    fontWeight: 500
+                <PolarAngleAxis
+                  dataKey="trait"
+                  tick={{
+                    fontSize: 12,
+                    fill: "#9ca3af",
+                    fontWeight: 500,
                   }}
                   tickLine={false}
                 />
-                <PolarRadiusAxis 
-                  angle={30} 
-                  domain={[0, 100]} 
+                <PolarRadiusAxis
+                  angle={30}
+                  domain={[0, 100]}
                   tick={false}
                   axisLine={false}
                 />
@@ -116,7 +134,7 @@ export function TraitRadarChart({ traits }: TraitRadarChartProps) {
                   fill="#10b981"
                   fillOpacity={0.25}
                   strokeWidth={2.5}
-                  dot={{ r: 4, fill: '#10b981', strokeWidth: 0 }}
+                  dot={{ r: 4, fill: "#10b981", strokeWidth: 0 }}
                 />
                 <Tooltip content={<CustomTooltip />} />
               </RadarChart>
@@ -125,7 +143,7 @@ export function TraitRadarChart({ traits }: TraitRadarChartProps) {
 
           {/* Trait List */}
           <div className="space-y-3">
-            {traits.map(trait => (
+            {traits.map((trait) => (
               <TraitRow key={trait.dimension} trait={trait} />
             ))}
           </div>
@@ -146,22 +164,24 @@ function TraitRow({ trait }: { trait: TraitScore }) {
           <span className="text-sm font-medium truncate">{info.title}</span>
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold">{trait.score}</span>
-            {trait.trend === 'IMPROVING' && (
+            {trait.trend === "IMPROVING" && (
               <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
             )}
-            {trait.trend === 'DECLINING' && (
+            {trait.trend === "DECLINING" && (
               <TrendingDown className="w-3.5 h-3.5 text-amber-500" />
             )}
           </div>
         </div>
         {/* Progress bar */}
         <div className="h-2 bg-muted rounded-full overflow-hidden">
-          <div 
+          <div
             className={cn(
               "h-full rounded-full transition-all",
-              trait.score >= 70 ? "bg-emerald-500" :
-              trait.score >= 50 ? "bg-primary" :
-              "bg-amber-500"
+              trait.score >= 70
+                ? "bg-emerald-500"
+                : trait.score >= 50
+                ? "bg-primary"
+                : "bg-amber-500"
             )}
             style={{ width: `${trait.score}%` }}
           />

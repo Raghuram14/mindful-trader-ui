@@ -1,6 +1,6 @@
 /**
  * DNA Summary Card
- * 
+ *
  * Hero card showing the trader's archetype and personalized narrative.
  * Calm, coach-like presentation - not a "badge" or "achievement".
  */
@@ -8,10 +8,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, BarChart3, Calendar, TrendingUp } from "lucide-react";
-import { 
-  type TraderArchetype, 
+import {
+  type TraderArchetype,
   type DataQuality,
-  ARCHETYPE_DISPLAY 
+  ARCHETYPE_DISPLAY,
 } from "@/api/tradingDNA";
 import { cn } from "@/lib/utils";
 
@@ -22,11 +22,11 @@ interface DNASummaryCardProps {
   dataQuality: DataQuality;
 }
 
-export function DNASummaryCard({ 
-  archetype, 
-  confidence, 
+export function DNASummaryCard({
+  archetype,
+  confidence,
   narrative,
-  dataQuality 
+  dataQuality,
 }: DNASummaryCardProps) {
   const archetypeInfo = ARCHETYPE_DISPLAY[archetype];
 

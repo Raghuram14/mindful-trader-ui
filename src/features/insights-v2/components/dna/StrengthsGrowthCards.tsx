@@ -1,6 +1,6 @@
 /**
  * Strengths & Growth Areas Cards
- * 
+ *
  * Side-by-side display of what's working well and where to focus.
  * Calm, coaching language - not "good vs bad".
  */
@@ -15,7 +15,10 @@ interface StrengthsGrowthCardsProps {
   growthAreas: BehavioralArea[];
 }
 
-export function StrengthsGrowthCards({ strengths, growthAreas }: StrengthsGrowthCardsProps) {
+export function StrengthsGrowthCards({
+  strengths,
+  growthAreas,
+}: StrengthsGrowthCardsProps) {
   return (
     <div className="grid md:grid-cols-2 gap-6">
       {/* Strengths Card */}
@@ -30,11 +33,7 @@ export function StrengthsGrowthCards({ strengths, growthAreas }: StrengthsGrowth
           {strengths.length > 0 ? (
             <div className="space-y-4">
               {strengths.map((area, index) => (
-                <AreaItem 
-                  key={index} 
-                  area={area} 
-                  variant="strength"
-                />
+                <AreaItem key={index} area={area} variant="strength" />
               ))}
             </div>
           ) : (
@@ -57,11 +56,7 @@ export function StrengthsGrowthCards({ strengths, growthAreas }: StrengthsGrowth
           {growthAreas.length > 0 ? (
             <div className="space-y-4">
               {growthAreas.map((area, index) => (
-                <AreaItem 
-                  key={index} 
-                  area={area} 
-                  variant="growth"
-                />
+                <AreaItem key={index} area={area} variant="growth" />
               ))}
             </div>
           ) : (
@@ -75,37 +70,35 @@ export function StrengthsGrowthCards({ strengths, growthAreas }: StrengthsGrowth
   );
 }
 
-function AreaItem({ 
-  area, 
-  variant 
-}: { 
-  area: BehavioralArea; 
-  variant: 'strength' | 'growth';
+function AreaItem({
+  area,
+  variant,
+}: {
+  area: BehavioralArea;
+  variant: "strength" | "growth";
 }) {
   const traitInfo = TRAIT_DISPLAY[area.dimension];
-  
+
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-2">
         <span className="text-base">{traitInfo.icon}</span>
-        <h4 className={cn(
-          "text-sm font-medium",
-          variant === 'strength' 
-            ? "text-emerald-500" 
-            : "text-amber-500"
-        )}>
+        <h4
+          className={cn(
+            "text-sm font-medium",
+            variant === "strength" ? "text-emerald-500" : "text-amber-500"
+          )}
+        >
           {area.title}
         </h4>
       </div>
-      <p className="text-sm text-muted-foreground pl-6">
-        {area.description}
-      </p>
-      <div className={cn(
-        "text-xs pl-6 flex items-center gap-1",
-        variant === 'strength' 
-          ? "text-emerald-500/70" 
-          : "text-amber-500/70"
-      )}>
+      <p className="text-sm text-muted-foreground pl-6">{area.description}</p>
+      <div
+        className={cn(
+          "text-xs pl-6 flex items-center gap-1",
+          variant === "strength" ? "text-emerald-500/70" : "text-amber-500/70"
+        )}
+      >
         <TrendingUp className="w-3 h-3" />
         <span>{area.evidence}</span>
       </div>

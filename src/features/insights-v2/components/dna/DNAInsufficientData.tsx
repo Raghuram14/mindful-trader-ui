@@ -1,6 +1,6 @@
 /**
  * DNA Insufficient Data Component
- * 
+ *
  * Shown when user doesn't have enough trades for DNA computation.
  * Encouraging, not discouraging.
  */
@@ -16,7 +16,10 @@ interface DNAInsufficientDataProps {
 
 const MINIMUM_TRADES = 20;
 
-export function DNAInsufficientData({ tradeCount, message }: DNAInsufficientDataProps) {
+export function DNAInsufficientData({
+  tradeCount,
+  message,
+}: DNAInsufficientDataProps) {
   const progress = Math.min(100, (tradeCount / MINIMUM_TRADES) * 100);
 
   return (
@@ -46,7 +49,8 @@ export function DNAInsufficientData({ tradeCount, message }: DNAInsufficientData
         <div className="flex items-center justify-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
           <TrendingUp className="w-4 h-4" />
           <span>
-            {MINIMUM_TRADES - tradeCount} more trade{MINIMUM_TRADES - tradeCount !== 1 ? 's' : ''} to go
+            {MINIMUM_TRADES - tradeCount} more trade
+            {MINIMUM_TRADES - tradeCount !== 1 ? "s" : ""} to go
           </span>
         </div>
 

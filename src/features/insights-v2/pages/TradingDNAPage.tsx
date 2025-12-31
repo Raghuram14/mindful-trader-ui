@@ -3,7 +3,7 @@
  *
  * Behavioral fingerprint dashboard - reveals who you are as a trader.
  * Shows stable traits, patterns, strengths, and evolution over time.
- * 
+ *
  * Philosophy: Awareness, not judgment. Mirror, not scorecard.
  */
 
@@ -11,7 +11,13 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Loader2, RefreshCw, Dna, AlertCircle } from "lucide-react";
 import { getTradingDNA, type TradingDNAResponse } from "@/api/tradingDNA";
 import { DNASummaryCard } from "../components/dna/DNASummaryCard";
@@ -88,7 +94,9 @@ export default function TradingDNAPage() {
             <CardContent className="flex items-center gap-3 py-6">
               <AlertCircle className="w-5 h-5 text-destructive" />
               <div>
-                <p className="text-sm font-medium">Unable to load your Trading DNA</p>
+                <p className="text-sm font-medium">
+                  Unable to load your Trading DNA
+                </p>
                 <p className="text-xs text-muted-foreground">
                   Please try again later
                 </p>
@@ -99,9 +107,9 @@ export default function TradingDNAPage() {
 
         {/* Insufficient Data State */}
         {!isLoading && !error && data && !data.hasEnoughData && (
-          <DNAInsufficientData 
-            tradeCount={data.tradeCount} 
-            message={data.message} 
+          <DNAInsufficientData
+            tradeCount={data.tradeCount}
+            message={data.message}
           />
         )}
 
@@ -109,7 +117,7 @@ export default function TradingDNAPage() {
         {!isLoading && !error && data?.hasEnoughData && data.dna && (
           <div className="space-y-8 max-w-5xl mx-auto">
             {/* Section 1: DNA Summary - Archetype and narrative */}
-            <DNASummaryCard 
+            <DNASummaryCard
               archetype={data.dna.archetype}
               confidence={data.dna.archetypeConfidence}
               narrative={data.dna.archetypeNarrative}
@@ -120,7 +128,7 @@ export default function TradingDNAPage() {
             <TraitRadarChart traits={data.dna.traits} />
 
             {/* Section 3: Strengths & Growth Areas */}
-            <StrengthsGrowthCards 
+            <StrengthsGrowthCards
               strengths={data.dna.strengths}
               growthAreas={data.dna.growthAreas}
             />
@@ -131,8 +139,9 @@ export default function TradingDNAPage() {
             )}
 
             {/* Section 5: Pattern Frequencies */}
-            {(data.dna.dominantPatterns.length > 0 || data.dna.rarePatterns.length > 0) && (
-              <PatternFrequencyCard 
+            {(data.dna.dominantPatterns.length > 0 ||
+              data.dna.rarePatterns.length > 0) && (
+              <PatternFrequencyCard
                 dominantPatterns={data.dna.dominantPatterns}
                 rarePatterns={data.dna.rarePatterns}
               />
@@ -145,7 +154,8 @@ export default function TradingDNAPage() {
               </p>
               {data.dna.computedAt && (
                 <p className="text-xs text-muted-foreground/60 mt-1">
-                  Last computed: {new Date(data.dna.computedAt).toLocaleDateString()}
+                  Last computed:{" "}
+                  {new Date(data.dna.computedAt).toLocaleDateString()}
                 </p>
               )}
             </div>
