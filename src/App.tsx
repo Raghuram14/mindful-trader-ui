@@ -15,6 +15,7 @@ import TradeDetailPage from "./pages/TradeDetailPage";
 import ExitTradePage from "./pages/ExitTradePage";
 import InsightsPage from "./features/insights/pages/InsightsPage";
 import InsightsV2Page from "./features/insights-v2/pages/InsightsV2Page";
+import TradingDNAPage from "./features/insights-v2/pages/TradingDNAPage";
 import HistoryPage from "./pages/HistoryPage";
 import TradingRulesPage from "./pages/TradingRulesPage";
 import TradeImportPage from "./features/trade-import/pages/TradeImportPage";
@@ -108,6 +109,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <InsightsV2Page />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/trading-dna"
+        element={
+          <ProtectedRoute>
+            <TradingDNAPage />
           </ProtectedRoute>
         }
       />

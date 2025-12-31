@@ -16,6 +16,8 @@ import { TodaysFocusStrip } from "../components/TodaysFocusStrip";
 import { InsightGroup } from "../components/InsightGroup";
 import { DataCoverageNote } from "../components/DataCoverageNote";
 import { ExportInsightsButton } from "../components/ExportInsightsButton";
+import { StreakStrip } from "../components/StreakStrip";
+import { MilestoneToast } from "../components/MilestoneToast";
 import { InsightRange, InsightCategory } from "../types/insightV2.types";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSearchParams } from "react-router-dom";
@@ -67,6 +69,9 @@ export default function InsightsV2Page() {
           <div className="space-y-8 max-w-4xl mx-auto">
             {/* SECTION 1: Your Progress Journey (Before/After) */}
             <JourneyProgressCard />
+
+            {/* SECTION 1.5: Active Behavioral Streaks */}
+            <StreakStrip />
 
             {/* SECTION 2: Today's Focus - What to work on */}
             {insightsResponse.prioritizedInsights.length > 0 && (
@@ -151,6 +156,9 @@ export default function InsightsV2Page() {
             </div>
           </div>
         )}
+
+        {/* Milestone Toast - shows new achievements */}
+        <MilestoneToast />
       </div>
     </AppLayout>
   );

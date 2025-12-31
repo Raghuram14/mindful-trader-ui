@@ -1,84 +1,325 @@
-# MindfulTrade – Behavioral Intelligence Platform
+# MindfulTrade Frontend
 
-MindfulTrade helps active retail traders notice emotional patterns, pre-commit to risk comfort, and trade with calm discipline. The product is a mirror, not a scoreboard: no charts, no signals, no hype.
+Frontend application for **MindfulTrade** - A Behavioral Intelligence Platform for retail traders. The UI acts as a calm, supportive mirror helping traders notice patterns without judgment.
 
-## Core Principles (read first)
-- Behavior over performance; awareness over optimization.
-- Calm tone: avoid urgency, shame, or hype.
-- Risk Comfort is central: “How much can I lose and stay emotionally stable?”
-- Dark, quiet UI; muted success/failure cues.
+## 🎯 Product Philosophy
+
+> *"The product is a mirror, not a scoreboard: no charts, no signals, no hype."*
+
+- **Behavior over Performance:** Focus on discipline, not P&L
+- **Calm Tone:** Avoid urgency, shame, or hype
+- **Risk Comfort Central:** "How much can I lose and stay emotionally stable?"
+- **Dark, Quiet UI:** Muted success/failure cues
 
 For detailed guidance, see `CLAUDE.md` (must-read before coding).
 
-## Tech Stack
-- Vite + React + TypeScript
-- Tailwind CSS + shadcn/ui
-- React Router, TanStack Query, Zod
+---
 
-## Getting Started
+## 🛠 Tech Stack
 
-### 1. Clone and Install
+| Category | Technology | Version |
+|----------|------------|---------|
+| Build Tool | [Vite](https://vitejs.dev) | 5.x |
+| Framework | React | 18.x |
+| Language | TypeScript | 5.x |
+| Styling | Tailwind CSS | 3.x |
+| UI Components | [shadcn/ui](https://ui.shadcn.com) | - |
+| Routing | React Router | 6.x |
+| Data Fetching | TanStack Query | 5.x |
+| Validation | Zod | 3.x |
+| Icons | Lucide React | - |
 
-```sh
-git clone <repo_url>
+---
+
+## 📁 Project Structure
+
+```
+mindful-trader-ui/
+├── public/
+│   └── robots.txt
+├── src/
+│   ├── main.tsx                  # App entry point
+│   ├── App.tsx                   # Root component with routing
+│   ├── index.css                 # Global styles + Tailwind
+│   ├── api/                      # API client modules
+│   │   ├── client.ts             # Base API client with auth
+│   │   ├── profile.ts            # User profile API
+│   │   ├── trades.ts             # Trade CRUD API
+│   │   ├── rules.ts              # Trading rules API
+│   │   ├── suggestions.ts        # Feedback API
+│   │   └── streaks.ts            # Streaks & milestones API
+│   ├── auth/                     # Authentication
+│   │   ├── auth.context.tsx      # Auth context provider
+│   │   ├── auth.service.ts       # Token management
+│   │   └── auth.types.ts         # Auth types
+│   ├── components/               # Shared components
+│   │   ├── ui/                   # shadcn/ui components
+│   │   ├── layout/               # AppLayout, Sidebar, Header
+│   │   ├── trade/                # Trade-related components
+│   │   ├── landing/              # Landing page sections
+│   │   └── broker/               # Broker connection UI
+│   ├── context/                  # React contexts
+│   │   ├── AuthContext.tsx
+│   │   ├── RulesContext.tsx
+│   │   └── TradeContext.tsx
+│   ├── features/                 # Feature modules
+│   │   ├── insights/             # Behavioral insights
+│   │   ├── insights-v2/          # Enhanced insights (current)
+│   │   ├── coaching/             # Daily coaching experience
+│   │   └── trade-import/         # CSV trade import
+│   ├── hooks/                    # Custom React hooks
+│   │   ├── use-mobile.tsx
+│   │   ├── use-toast.ts
+│   │   └── useGoogleAuth.tsx
+│   ├── lib/
+│   │   ├── utils.ts              # Utility functions (cn, etc.)
+│   │   └── mockData.ts           # Development mock data
+│   ├── pages/                    # Route pages
+│   │   ├── LandingPage.tsx       # Public landing
+│   │   ├── AuthPage.tsx          # Google authentication
+│   │   ├── TodayPage.tsx         # Today's dashboard
+│   │   ├── AddTradePageNew.tsx   # Create trade wizard
+│   │   ├── ExitTradePage.tsx     # Close trade flow
+│   │   ├── TradeDetailPage.tsx   # View single trade
+│   │   ├── HistoryPage.tsx       # Trade history + calendar
+│   │   ├── InsightsPage.tsx      # Behavioral insights
+│   │   ├── TradingRulesPage.tsx  # Manage guardrails
+│   │   ├── SuggestionsPage.tsx   # User feedback
+│   │   ├── BrokersPage.tsx       # Broker connections
+│   │   └── ...
+│   └── utils/                    # Utility functions
+├── CLAUDE.md                     # AI coding context (563 lines)
+├── .env.example                  # Environment template
+├── tailwind.config.ts
+├── tsconfig.json
+├── vite.config.ts
+└── package.json
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js >= 18.x or [Bun](https://bun.sh) >= 1.x
+- Backend server running (see [mindful-trader-server](../mindful-trader-server))
+
+### Installation
+
+```bash
+# Clone the repository
+git clone <repo-url>
 cd mindful-trader-ui
-npm install
+
+# Install dependencies
+bun install
+# or: npm install
+
+# Copy environment template
+cp .env.example .env
+# Edit .env with your configuration
 ```
 
-### 2. Setup Git Hooks (Required)
+### Setup Git Hooks (Required)
 
-**Important:** Set up pre-push hooks to verify code quality before pushing:
-
-```sh
-npm run setup-hooks
+```bash
+bun run setup-hooks
+# or: npm run setup-hooks
 ```
 
-This installs git hooks that will automatically:
-- ✅ Run ESLint before every push
-- ✅ Run TypeScript type checking
-- ✅ Build the project to ensure it compiles
+This installs pre-push hooks that verify:
+- ✅ ESLint passes
+- ✅ TypeScript compiles
+- ✅ Build succeeds
 
-**If any check fails, the push will be blocked.** This prevents broken code from being pushed.
+### Development
 
-> 💡 **Tip:** You can manually verify your code anytime with `npm run verify`
+```bash
+# Start development server
+bun run dev
+# App available at http://localhost:5173
 
-### 3. Start Development
+# Run all verification checks
+bun run verify
 
-```sh
-npm run dev
+# Individual checks
+bun run lint          # ESLint
+bun run type-check    # TypeScript
+bun run build         # Production build
 ```
 
-The app will be available at `http://localhost:5173` (or the port shown in terminal).
+---
 
-## Development Notes
-- Keep forms minimal and vertical; avoid modal overload.
-- Use language like “notice”, “tend to”, “based on recent trades”.
-- No performance/leaderboard features; no gamification.
-- Prefer clear, small components; Tailwind utilities; minimal global state.
+## 📱 Pages Overview
 
-## Testing & Quality
+| Page | Route | Description |
+|------|-------|-------------|
+| **Landing** | `/` | Public landing page with value proposition |
+| **Auth** | `/auth` | Google OAuth authentication |
+| **Today** | `/today` | Today's trading dashboard with open trades |
+| **Add Trade** | `/add-trade` | Multi-step trade creation wizard |
+| **Exit Trade** | `/exit-trade/:id` | Trade closing flow with reflection |
+| **Trade Detail** | `/trade/:id` | View single trade details |
+| **History** | `/history` | Trade history with calendar & filters |
+| **Insights** | `/insights` | Behavioral insights and journey progress |
+| **Trading Rules** | `/rules` | Manage trading guardrails |
+| **Suggestions** | `/suggestions` | Submit feedback and feature requests |
+| **Brokers** | `/brokers` | Connect broker accounts (Zerodha) |
+| **Broker Callback** | `/broker/callback` | OAuth callback handler |
+
+---
+
+## 🧩 Features
+
+### Core Features
+
+| Feature | Location | Description |
+|---------|----------|-------------|
+| **Trade Management** | `components/trade/` | Create, view, close trades with full journaling |
+| **Trading Rules** | `context/RulesContext.tsx` | 18 rule types acting as guardrails |
+| **Behavioral Insights** | `features/insights-v2/` | Pattern detection with 13 detectors |
+| **Daily Coaching** | `features/coaching/` | Personalized guidance and reflections |
+| **Streaks & Milestones** | `features/insights-v2/` | Behavioral streaks (not gamified) |
+| **Trade Import** | `features/trade-import/` | CSV import from broker tradebooks |
+| **Broker Integration** | `components/broker/` | Zerodha Kite Connect |
+
+### Component Architecture
+
+```mermaid
+graph TB
+    subgraph App
+        Router[React Router]
+    end
+    
+    subgraph Layouts
+        AppLayout[AppLayout]
+        LandingLayout[Landing Layout]
+    end
+    
+    subgraph Pages
+        Today[TodayPage]
+        History[HistoryPage]
+        Insights[InsightsV2Page]
+        AddTrade[AddTradePageNew]
+    end
+    
+    subgraph Features
+        InsightsV2[insights-v2]
+        Coaching[coaching]
+        TradeImport[trade-import]
+    end
+    
+    subgraph Shared
+        UI[ui/]
+        Trade[trade/]
+        Broker[broker/]
+    end
+    
+    Router --> AppLayout
+    Router --> LandingLayout
+    AppLayout --> Today
+    AppLayout --> History
+    AppLayout --> Insights
+    AppLayout --> AddTrade
+    
+    Insights --> InsightsV2
+    Today --> Coaching
+    History --> TradeImport
+    
+    Today --> Trade
+    AddTrade --> Trade
+    Today --> UI
+```
+
+---
+
+## ⚙️ Environment Variables
+
+Create a `.env` file based on `.env.example`:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_API_URL` | Yes | Backend API base URL (e.g., `http://localhost:3000/api`) |
+| `VITE_GOOGLE_CLIENT_ID` | Yes | Google OAuth Client ID |
+
+---
+
+## 🎨 UI/UX Guidelines
+
+### Design Principles
+
+1. **Calm, Not Urgent:** No red alerts, no FOMO triggers
+2. **Supportive Language:** "You tend to..." not "You failed to..."
+3. **Minimal Modals:** Prefer inline flows over modal overload
+4. **Vertical Forms:** Simple, focused input flows
+5. **Muted Feedback:** Subtle success/failure indicators
+
+### Naming Conventions
+
+| Do ✅ | Don't ❌ |
+|------|---------|
+| `RiskComfortSelector` | `RiskToleranceSlider` |
+| `BehavioralReminder` | `WarningAlert` |
+| `JourneyProgress` | `AchievementBadge` |
+| `DailyReflection` | `PerformanceReview` |
+
+### Color Palette
+
+- **Background:** Dark, quiet tones
+- **Success:** Muted green (not bright)
+- **Caution:** Soft amber (not alarming red)
+- **Accent:** Calm blue
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run all checks
+bun run verify
+
+# Individual checks
+bun run lint          # ESLint
+bun run type-check    # TypeScript
+bun run build         # Build verification
+```
 
 ### Pre-push Verification
 
-The git hooks (set up in step 2) automatically verify code quality before pushing. You can also run checks manually:
+Git hooks (set up during installation) automatically verify code before pushing.
 
-```sh
-# Run all checks (lint + type-check + build)
-npm run verify
+---
 
-# Run individual checks
-npm run lint          # ESLint
-npm run type-check    # TypeScript type checking
-npm run build         # Build verification
-```
+## 📚 Documentation
 
-### Code Quality Guidelines
+| Document | Description |
+|----------|-------------|
+| [CLAUDE.md](./CLAUDE.md) | AI coding context (must-read) |
+| [Backend README](../mindful-trader-server/README.md) | Backend documentation |
 
-- Follow the UX rules and naming guidance in `CLAUDE.md` (e.g., `RiskComfortSelector`, `BehavioralReminder`)
-- Ensure all checks pass before pushing (`npm run verify`)
-- The CI pipeline will also run these checks on GitHub
+---
 
-> 📖 For detailed git hooks documentation, see [README-GIT-HOOKS.md](./README-GIT-HOOKS.md)
+## 🤝 Contributing
 
-## Deployment
-Set up your preferred hosting for a Vite React app (e.g., Netlify, Vercel, static hosting). Ensure SEO meta tags in `index.html` reference MindfulTrade.
+### Quick Start
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Run `bun run setup-hooks`
+4. Make your changes following UI/UX guidelines
+5. Run `bun run verify` to ensure all checks pass
+6. Commit and push
+7. Open a Pull Request
+
+### Key Files to Review
+
+- `CLAUDE.md` - Product philosophy and coding guidelines
+- `src/components/ui/` - shadcn/ui components
+- `src/features/` - Feature module patterns
+
+---
+
+## 📄 License
+
+MIT

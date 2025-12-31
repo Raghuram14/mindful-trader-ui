@@ -10,6 +10,7 @@ import {
   User,
   MessageSquare,
   Zap,
+  Dna,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/auth/auth.context";
@@ -21,6 +22,7 @@ const navItems = [
   { title: "My Rules", path: "/rules", icon: Shield },
   { title: "Broker", path: "/broker-settings", icon: Zap },
   { title: "Insights", path: "/insights-v2", icon: Sparkles },
+  { title: "Trading DNA", path: "/trading-dna", icon: Dna },
   { title: "History", path: "/history", icon: History },
   { title: "Suggestions", path: "/suggestions", icon: MessageSquare },
 ];
