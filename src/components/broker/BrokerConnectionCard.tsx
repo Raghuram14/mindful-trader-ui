@@ -21,11 +21,13 @@ import {
 interface BrokerConnectionCardProps {
   broker: "ZERODHA" | "ANGELONE" | "UPSTOX" | "IIFL";
   enabled?: boolean;
+  disabledForUser?: boolean;
 }
 
 export function BrokerConnectionCard({
   broker,
   enabled = true,
+  disabledForUser = false,
 }: BrokerConnectionCardProps) {
   const [status, setStatus] = useState<BrokerConnectionStatus | null>(null);
   const [loading, setLoading] = useState(false);
@@ -49,6 +51,7 @@ export function BrokerConnectionCard({
     if (enabled) {
       loadStatus();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [broker, enabled]);
 
   const loadStatus = async () => {
@@ -63,6 +66,11 @@ export function BrokerConnectionCard({
   };
 
   const handleConnect = async () => {
+    if (disabledForUser) {
+      setError("Broker connection is currently unavailable for your account.");
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -227,7 +235,7 @@ export function BrokerConnectionCard({
           {!status?.connected ? (
             <Button
               onClick={handleConnect}
-              disabled={loading}
+              disabled={loading || disabledForUser}
               className="w-full"
             >
               {loading ? (

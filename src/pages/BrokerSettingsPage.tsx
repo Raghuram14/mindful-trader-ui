@@ -1,6 +1,7 @@
 import { BrokerConnectionCard } from "@/components/broker/BrokerConnectionCard";
 import { PositionSyncDashboard } from "@/components/broker/PositionSyncDashboard";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useAuth } from "@/auth/auth.context";
 import {
   Card,
   CardContent,
@@ -10,7 +11,12 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+const ALLOWED_BROKER_EMAIL = "raghuram.r14@gmail.com";
+
 export function BrokerSettingsPage() {
+  const { userEmail } = useAuth();
+  const isBrokerAllowed = userEmail === ALLOWED_BROKER_EMAIL;
+
   return (
     <AppLayout>
       <div className="container mx-auto py-8 space-y-8">
@@ -31,7 +37,11 @@ export function BrokerSettingsPage() {
 
           <TabsContent value="connections" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
-              <BrokerConnectionCard broker="ZERODHA" enabled={true} />
+              <BrokerConnectionCard
+                broker="ZERODHA"
+                enabled={true}
+                disabledForUser={!isBrokerAllowed}
+              />
               <BrokerConnectionCard broker="ANGELONE" enabled={false} />
               <BrokerConnectionCard broker="UPSTOX" enabled={false} />
               <BrokerConnectionCard broker="IIFL" enabled={false} />

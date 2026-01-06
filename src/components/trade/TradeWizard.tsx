@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check } from "lucide-react";
 import {
   Card,
@@ -24,6 +24,7 @@ import { RiskOverviewPanel } from "./RiskOverviewPanel";
 import { BrokerSelector } from "../broker/BrokerSelector";
 import { DateTimePicker } from "../ui/date-time-picker";
 import { useRules } from "@/context/RulesContext";
+import { brokerApi } from "@/api/broker";
 import type { InstrumentSearchResult } from "@/api/broker";
 import { cn } from "@/lib/utils";
 
@@ -95,6 +96,20 @@ export function TradeWizard({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBrokerConnected, setIsBrokerConnected] = useState(false);
+
+  // Check if any broker is connected
+  useEffect(() => {
+    const checkBrokerConnection = async () => {
+      try {
+        const status = await brokerApi.getStatus("zerodha");
+        setIsBrokerConnected(status.connected || false);
+      } catch (error) {
+        setIsBrokerConnected(false);
+      }
+    };
+    checkBrokerConnection();
+  }, []);
 
   // Validation functions
   const validateSetup = (): boolean => {
@@ -329,6 +344,7 @@ export function TradeWizard({
                       });
                       setErrors({ ...errors, symbol: "" });
                     }}
+                    brokerConnected={isBrokerConnected}
                     className="mt-1.5"
                   />
                   {errors.symbol && (

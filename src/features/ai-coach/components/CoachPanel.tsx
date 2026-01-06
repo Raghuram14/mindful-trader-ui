@@ -32,9 +32,16 @@ import {
 interface CoachPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  hasEnoughTrades?: boolean;
+  tradeCount?: number;
 }
 
-export function CoachPanel({ isOpen, onClose }: CoachPanelProps) {
+export function CoachPanel({
+  isOpen,
+  onClose,
+  hasEnoughTrades = true,
+  tradeCount = 0,
+}: CoachPanelProps) {
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState<CoachMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -212,6 +219,79 @@ export function CoachPanel({ isOpen, onClose }: CoachPanelProps) {
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
+            ) : !hasEnoughTrades ? (
+              // Not enough trades state
+              <div className="space-y-6 py-4 px-2">
+                <div className="text-center space-y-4">
+                  <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Sparkles className="h-8 w-8 text-primary/60" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">
+                      Build Your Trading History
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      The AI Coach analyzes your behavioral patterns to provide
+                      personalized insights.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Trade Progress</span>
+                    <span className="text-sm text-muted-foreground">
+                      {tradeCount} / 10
+                    </span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2">
+                    <div
+                      className="bg-primary h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${Math.min((tradeCount / 10) * 100, 100)}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {10 - tradeCount} more{" "}
+                    {10 - tradeCount === 1 ? "trade" : "trades"} needed to
+                    unlock AI Coach
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                    What you'll get:
+                  </p>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>Pattern recognition in your trading behavior</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>Insights into why you might break your rules</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>Understanding your emotional trading triggers</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>Personalized behavioral coaching</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 text-sm text-blue-900 dark:text-blue-100">
+                  <p className="font-medium mb-1">💡 Pro Tip</p>
+                  <p className="text-xs">
+                    Start journaling your trades now. The more context you
+                    provide about your reasoning and emotions, the better
+                    insights the coach can provide.
+                  </p>
+                </div>
+              </div>
             ) : messages.length === 0 && !streamingResponse ? (
               // Empty state with starter prompts
               <div className="space-y-6 py-4">
@@ -282,7 +362,7 @@ export function CoachPanel({ isOpen, onClose }: CoachPanelProps) {
         {/* Input Area */}
         <div className="px-5 py-4 border-t border-border space-y-3">
           {/* Rate limit indicator */}
-          {status && (
+          {status && hasEnoughTrades && (
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>
                 {status.remaining > 0
@@ -299,8 +379,14 @@ export function CoachPanel({ isOpen, onClose }: CoachPanelProps) {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask about your patterns..."
-              disabled={isStreaming || status?.remaining === 0}
+              placeholder={
+                hasEnoughTrades
+                  ? "Ask about your patterns..."
+                  : "Complete 10 trades to unlock..."
+              }
+              disabled={
+                !hasEnoughTrades || isStreaming || status?.remaining === 0
+              }
               className={cn(
                 "flex-1 min-h-[44px] max-h-[120px] resize-none",
                 "text-sm placeholder:text-muted-foreground/60"
@@ -310,10 +396,16 @@ export function CoachPanel({ isOpen, onClose }: CoachPanelProps) {
             <Button
               onClick={() => handleAsk()}
               disabled={
-                !question.trim() || isStreaming || status?.remaining === 0
+                !hasEnoughTrades ||
+                !question.trim() ||
+                isStreaming ||
+                status?.remaining === 0
               }
               size="icon"
               className="h-11 w-11 shrink-0"
+              title={
+                !hasEnoughTrades ? "Complete 10 trades to unlock AI Coach" : ""
+              }
             >
               {isStreaming ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

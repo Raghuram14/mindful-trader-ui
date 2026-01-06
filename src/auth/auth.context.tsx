@@ -7,12 +7,14 @@ import React, {
 } from "react";
 import { authService } from "./auth.service";
 import { AuthState } from "./auth.types";
+import { profileApi } from "@/api/profile";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
+  userEmail: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,6 +25,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: false,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  // Fetch user email from profile API
+  const fetchUserEmail = async () => {
+    try {
+      const profile = await profileApi.getProfile();
+      setUserEmail(profile.email);
+    } catch (error) {
+      console.error("Failed to fetch user email:", error);
+      setUserEmail(null);
+    }
+  };
 
   // Check for existing token on mount
   useEffect(() => {
@@ -32,6 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         isAuthenticated: true,
       });
+      // Fetch email from profile API
+      fetchUserEmail();
     }
     setIsLoading(false);
   }, []);
@@ -44,6 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         isAuthenticated: true,
       });
+      // Fetch email from profile API
+      await fetchUserEmail();
       // Navigation will be handled by the component calling this
     } catch (error) {
       authService.clearToken();
@@ -51,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token: null,
         isAuthenticated: false,
       });
+      setUserEmail(null);
       throw error;
     }
   };
@@ -67,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token: null,
         isAuthenticated: false,
       });
+      setUserEmail(null);
       // Navigation will be handled by the component calling this
     }
   };
@@ -78,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginWithGoogle,
         logout,
         isLoading,
+        userEmail,
       }}
     >
       {children}

@@ -2,6 +2,7 @@ import { apiClient } from './client';
 import { UserProfile } from '@/lib/mockData';
 
 export interface UserProfileResponse {
+  email: string;
   name: string;
   experienceLevel?: UserProfile['experienceLevel'];
   accountSize?: number;
